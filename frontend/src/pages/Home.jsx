@@ -1,6 +1,7 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router";
+import HeroCategories from "../features/home/components/HeroCategories";
 
 const Home = () => {
     const navigate = useNavigate()
@@ -77,6 +78,8 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      <HeroCategories/>
     </section>
   );
 };

@@ -9,7 +9,7 @@ import ProductSidebar from "../components/ProductSidebar";
 import { getProductsThunk } from "../../../slice/product/productThunk";
 import EmptyProducts from "./../components/EmptyProducts";
 
-const PRODUCTS_PER_PAGE = 3;
+const PRODUCTS_PER_PAGE = 10;
 
 const Products = () => {
   const dispatch = useDispatch();
