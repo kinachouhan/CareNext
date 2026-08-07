@@ -5,8 +5,6 @@ import categoryData from "../../../lib/categoryData.json";
 
 const HeroCategories = () => {
   const scrollRef = useRef(null);
-
-  // Dynamically map categories from categoryData.json
   const categories = useMemo(() => {
     return categoryData.map((cat) => ({
       name: cat.name,
@@ -26,14 +24,13 @@ const HeroCategories = () => {
   return (
     <div className="w-full max-w-[1400px] mx-auto px-4 py-8">
       
-      {/* HEADER SECTION: Title, Left/Right Buttons, and View All */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl md:text-2xl font-bold text-gray-900">
           Explore Categories
         </h2>
 
         <div className="flex items-center gap-4">
-          {/* View All Button */}
+        
           <Link
             to="/shop"
             className="text-sm font-semibold text-[#06A1B7] hover:underline"
@@ -41,7 +38,6 @@ const HeroCategories = () => {
             View All
           </Link>
 
-          {/* Left / Right Arrow Controls */}
           <div className="hidden sm:flex items-center gap-1.5">
             <button
               onClick={() => scroll("left")}
@@ -61,7 +57,7 @@ const HeroCategories = () => {
         </div>
       </div>
 
-      {/* CATEGORIES TRACK (Scroll hidden completely) */}
+     
       <div 
         ref={scrollRef}
         className="flex items-center gap-6 md:gap-8 overflow-x-auto scrollbar-none [-ms-overflow-style:none] [supports(scrollbar-width:none)]:scrollbar-none [&::-webkit-scrollbar]:hidden scroll-smooth py-2 px-1"
@@ -72,7 +68,7 @@ const HeroCategories = () => {
             to={item.link}
             className="flex flex-col items-center shrink-0 group/card cursor-pointer w-24 sm:w-28"
           >
-            {/* Circular Image Container */}
+           
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 bg-white border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)] group-hover/card:shadow-[0_6px_25px_rgba(6,161,183,0.15)] group-hover/card:border-[#06A1B7]/40 transition-all duration-300 relative overflow-hidden">
               <div className="w-full h-full rounded-full overflow-hidden bg-gray-50 flex items-center justify-center">
                 <img
@@ -83,7 +79,7 @@ const HeroCategories = () => {
               </div>
             </div>
 
-            {/* Category Title */}
+            
             <span className="mt-3 text-xs sm:text-sm font-semibold text-gray-800 text-center line-clamp-2 group-hover/card:text-[#06A1B7] transition-colors leading-tight">
               {item.name}
             </span>

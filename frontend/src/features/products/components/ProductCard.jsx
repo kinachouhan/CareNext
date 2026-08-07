@@ -1,14 +1,17 @@
 import { Heart, ShoppingCart } from "lucide-react";
-import { Link } from "react-router"; 
+import { Link } from "react-router";
+import { addToCart, openCart } from "../../../slice/cart/cartSlice";
+import { useDispatch } from "react-redux";
 
 const ProductCard = ({ product }) => {
   const price = product?.price || 0;
   const discount = product?.discount || 0;
   const finalPrice = Math.round(price - (price * discount) / 100);
-
+  const dispatch = useDispatch()
   const handleAddToCart = (e) => {
     e.preventDefault();
-    // Dispatch your add to cart action here
+    dispatch(addToCart(product));
+    dispatch(openCart());
     console.log("Added to cart:", product?.name);
   };
 
@@ -20,7 +23,6 @@ const ProductCard = ({ product }) => {
 
   return (
     <div className="group relative bg-white rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] md:hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] border border-gray-100 flex flex-col h-full overflow-hidden transition-all duration-300 md:hover:-translate-y-1">
-      
       {/* Discount Badge */}
       {discount > 0 && (
         <div className="absolute top-3 left-3 md:top-4 md:left-4 z-20 bg-[#FF3B30] text-white text-[10px] md:text-xs font-bold px-2 py-0.5 md:px-3 md:py-1 rounded-full tracking-wide shadow-sm pointer-events-none">
@@ -29,7 +31,7 @@ const ProductCard = ({ product }) => {
       )}
 
       {/* Wishlist Heart */}
-      <button 
+      <button
         onClick={handleWishlist}
         className="absolute top-3 right-3 md:top-4 md:right-4 z-20 bg-white border border-gray-100 shadow-sm rounded-full p-1.5 md:p-2.5 hover:bg-red-50 transition-colors group/heart"
         aria-label="Add to wishlist"
@@ -41,8 +43,10 @@ const ProductCard = ({ product }) => {
       </button>
 
       {/* SINGLE LINK WRAPPING THE ENTIRE PRODUCT INFO */}
-      <Link to={`/shop/${product._id}`} className="flex flex-col flex-1 group/link">
-        
+      <Link
+        to={`/shop/${product._id}`}
+        className="flex flex-col flex-1 group/link"
+      >
         {/* Image Area */}
         <div className="w-full h-36 md:h-52 lg:h-60 p-4 md:p-6 flex items-center justify-center bg-white shrink-0 overflow-hidden">
           <img
@@ -77,7 +81,7 @@ const ProductCard = ({ product }) => {
 
       {/* Action Button Container (Kept outside the Link) */}
       <div className="px-3 pb-3 md:px-5 md:pb-5 pt-0 mt-auto">
-        <button 
+        <button
           onClick={handleAddToCart}
           className="w-full bg-[#06A1B7] hover:bg-[#058b9e] text-white rounded-[10px] md:rounded-xl py-2 md:py-3 flex items-center justify-center gap-1.5 md:gap-2 text-sm md:text-base font-semibold shadow-sm md:shadow-cyan-500/20 transition-all active:scale-95"
         >
@@ -85,7 +89,6 @@ const ProductCard = ({ product }) => {
           Add to Cart
         </button>
       </div>
-      
     </div>
   );
 };

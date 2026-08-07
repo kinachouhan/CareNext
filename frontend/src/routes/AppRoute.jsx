@@ -12,7 +12,7 @@ import OrderSummary from "../admin/pages/OrderSummary";
 
 // User Imports
 import UserLayout from "../app/layout/UserLayout";
-import Home from "../pages/Home";
+import Home from "../features/home/page/Home";
 import About from "../pages/About";
 import Contact from "../pages/Contact";
 import Products from "../features/products/page/Products";
@@ -53,7 +53,7 @@ const AppRoute = () => {
       path: "/",
       element: <UserLayout />,
       children: [
-        { path: "", element: <Home /> },
+        { path: "", element: <Home/> },
         { path: "shop", element: <Products /> },
         { path: "shop/:id", element: <SingleProduct /> },
         { path: "about", element: <About /> },

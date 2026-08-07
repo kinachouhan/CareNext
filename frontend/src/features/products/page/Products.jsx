@@ -8,6 +8,7 @@ import Pagination from "../components/Pagination";
 import ProductSidebar from "../components/ProductSidebar";
 import { getProductsThunk } from "../../../slice/product/productThunk";
 import EmptyProducts from "./../components/EmptyProducts";
+ import { useSearchParams } from "react-router";
 
 const PRODUCTS_PER_PAGE = 10;
 
@@ -39,53 +40,61 @@ const Products = () => {
 
   const deferredSearch = useDeferredValue(search);
 
-  // Reset to page 1 only when filters/sort/search change
+  
   useEffect(() => {
     setCurrentPage(1);
   }, [deferredSearch, filters, sortBy]);
 
-  // Calculate Max Price only when products array changes
+ 
   const maxPrice = useMemo(() => {
     if (!products.length) return 0;
     return Math.max(...products.map((product) => Number(product.price) || 0));
   }, [products]);
 
-  // Sync max price with filters on initial load
+  
   useEffect(() => {
     setFilters((prev) => {
       if (prev.price > 0) return prev;
       return { ...prev, price: maxPrice };
     });
-  }, [maxPrice]);
+  }, [maxPrice])
 
-  // HIGHLY OPTIMIZED FILTER & SORT
+    
+
+
+const [searchParams] = useSearchParams();
+
+useEffect(() => {
+  const category = searchParams.get("category");
+
+  if (category) {
+    setFilters((prev) => ({
+      ...prev,
+      categories: [category],
+    }));
+  }
+}, [searchParams]);
+
+  
   const filteredProducts = useMemo(() => {
     if (!products.length) return [];
-
     const keyword = deferredSearch.trim().toLowerCase();
-    
-    // Create Sets ONCE outside the loop for O(1) lightning-fast lookups
     const categorySet = new Set(filters.categories);
     const subCategorySet = new Set(filters.subCategories);
     const maxFilterPrice = Number(filters.price);
 
-    // 1. FILTERING
+  
     let data = [...products].filter((product) => {
       
-      // FAST CHECKS: Execute simple boolean and number checks first.
-      // If any of these fail, JavaScript "short-circuits" and skips the rest of the checks for this product.
       if (filters.inStock && Number(product.stock) <= 0) return false;
       if (filters.featured && !product.featured) return false;
       if (filters.bestSeller && !product.bestSeller) return false;
       if (filters.newArrival && !product.newArrival) return false;
       if (Number(product.price) > maxFilterPrice) return false;
 
-      // SET CHECKS: O(1) complexity lookups
       if (categorySet.size > 0 && !categorySet.has(product.category)) return false;
       if (subCategorySet.size > 0 && !subCategorySet.has(product.subCategory)) return false;
 
-      // EXPENSIVE CHECKS: Run string concatenation and searches LAST, 
-      // and only if a keyword exists and the product passed all previous filters.
       if (keyword) {
         const searchString = `${product.name || ""} ${product.category || ""} ${product.subCategory || ""}`.toLowerCase();
         if (!searchString.includes(keyword)) return false;
@@ -94,7 +103,6 @@ const Products = () => {
       return true;
     });
 
-    // 2. SORTING
     switch (sortBy) {
       case "low":
         data.sort((a, b) => Number(a.price) - Number(b.price));
@@ -112,7 +120,7 @@ const Products = () => {
     return data;
   }, [products, deferredSearch, filters, sortBy]);
 
-  // PAGINATION CALCULATIONS
+
   const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
   const indexOfLastProduct = currentPage * PRODUCTS_PER_PAGE;
   const indexOfFirstProduct = indexOfLastProduct - PRODUCTS_PER_PAGE;
