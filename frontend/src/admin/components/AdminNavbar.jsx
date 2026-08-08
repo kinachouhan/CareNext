@@ -1,12 +1,16 @@
 import { Menu, UserCircle2, LogOut } from "lucide-react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router"; 
+import { logout } from "../../slice/auth/authSlice";
 
 const AdminNavbar = ({ onToggleSidebar }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch()
 
   const handleLogout = () => {
-    console.log("User logged out");
-    alert("Logged out successfully!");
+    localStorage.removeItem("isMasterAdmin");
+    dispatch(logout())
+    navigate("/auth/login", { replace: true });
   };
 
   return (

@@ -1,4 +1,5 @@
-import { Heart, ShoppingCart, Trash2 } from "lucide-react";
+import React, { useState } from "react";
+import { Heart, ShoppingCart, Trash2, Loader2 } from "lucide-react";
 import { Link } from "react-router";
 import useCart from "../../cart/hooks/useCart";
 
@@ -12,10 +13,30 @@ const ProductCard = ({ product }) => {
   const productId = product?._id || product?.id;
   const alreadyInCart = isInCart(productId);
 
+  // Local loading state to make button clicks feel instant and responsive
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleWishlist = (e) => {
     e.preventDefault();
-    // Dispatch your wishlist action here
     console.log("Added to wishlist:", product?.name);
+  };
+
+  const handleCartAction = async (e) => {
+    e.preventDefault();
+    if (isLoading) return;
+
+    setIsLoading(true);
+    try {
+      if (alreadyInCart) {
+        await removeItem(product);
+      } else {
+        await addToCart(product);
+      }
+    } catch (error) {
+      console.error("Cart action failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -49,6 +70,7 @@ const ProductCard = ({ product }) => {
           <img
             src={product?.image}
             alt={product?.name}
+            loading="lazy"
             className="max-h-full max-w-full object-contain transition-transform duration-500 md:group-hover/link:scale-110"
           />
         </div>
@@ -76,23 +98,37 @@ const ProductCard = ({ product }) => {
         </div>
       </Link>
 
-      {/* Action Button Container (Dynamic: Add to Cart OR Remove from Cart) */}
+      {/* Action Button Container (Optimized with Spinner and State Control) */}
       <div className="px-3 pb-3 md:px-5 md:pb-5 pt-0 mt-auto">
         {alreadyInCart ? (
           <button
-            onClick={() => removeItem(product)}
-            className="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-[10px] md:rounded-xl py-2 md:py-3 flex items-center justify-center gap-1.5 md:gap-2 text-sm md:text-base font-semibold transition-all active:scale-95"
+            onClick={handleCartAction}
+            disabled={isLoading}
+            className="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-[10px] md:rounded-xl py-2 md:py-3 flex items-center justify-center gap-1.5 md:gap-2 text-sm md:text-base font-semibold transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
-            Remove from Cart
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin text-red-500" />
+            ) : (
+              <>
+                <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
+                Remove
+              </>
+            )}
           </button>
         ) : (
           <button
-            onClick={() => addToCart(product)}
-            className="w-full bg-[#06A1B7] hover:bg-[#058b9e] text-white rounded-[10px] md:rounded-xl py-2 md:py-3 flex items-center justify-center gap-1.5 md:gap-2 text-sm md:text-base font-semibold shadow-sm md:shadow-cyan-500/20 transition-all active:scale-95"
+            onClick={handleCartAction}
+            disabled={isLoading}
+            className="w-full bg-[#06A1B7] hover:bg-[#058b9e] text-white rounded-[10px] md:rounded-xl py-2 md:py-3 flex items-center justify-center gap-1.5 md:gap-2 text-sm md:text-base font-semibold shadow-sm md:shadow-cyan-500/20 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-            Add to Cart
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin text-white" />
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
+                Add to Cart
+              </>
+            )}
           </button>
         )}
       </div>
@@ -100,4 +136,5 @@ const ProductCard = ({ product }) => {
   );
 };
 
-export default ProductCard;
+// Memoized to prevent redundant renders when listing out hundreds of products in a shop grid
+export default React.memo(ProductCard);

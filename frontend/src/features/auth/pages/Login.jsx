@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useForm } from "react-hook-form";
@@ -10,10 +10,12 @@ import { getCartThunk } from "../../../slice/cart/cartThunk";
 
 const Login = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
 
-  const { isLoading } = useSelector((state) => state.auth);
+  // Watch the user state directly from Redux
+  const { user, isLoading } = useSelector((state) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -28,19 +30,45 @@ const Login = () => {
     setShowPassword((prev) => !prev);
   }, []);
 
-  const onSubmit = async (data) => {
+  // 🚀 REACTIVE ROUTING: Automatically triggers the exact millisecond Redux gets the user
+  useEffect(() => {
+    if (user) {
+      const userEmail = user.email?.toLowerCase().trim() || "";
+      const masterAdminEmail = "darpan@gmail.com";
+
+      if (userEmail === masterAdminEmail) {
+        localStorage.setItem("isMasterAdmin", "true");
+        navigate("/admin", { replace: true });
+      } else {
+        localStorage.removeItem("isMasterAdmin");
+        navigate(redirectTo, { replace: true });
+      }
+    }
+  }, [user, navigate, redirectTo]);
+
+  const onSubmit = async (formData) => {
     try {
-      // Using .unwrap() to cleanly catch fulfillment or rejection via try/catch
-      await dispatch(loginThunk(data)).unwrap();
+      const inputEmail = formData.email?.toLowerCase().trim();
+      const masterAdminEmail = "darpan@gmail.com";
+
+      if (inputEmail === masterAdminEmail) {
+        localStorage.setItem("isMasterAdmin", "true");
+      }
+
+      // Just dispatch the login thunk. The useEffect above handles the navigation seamlessly!
+      await dispatch(loginThunk(formData)).unwrap();
 
       toast.success("Welcome Back!");
       dispatch(getCartThunk());
-      
-      // Full window redirect forces cookie re-hydration across layout cleanly
-      window.location.href = redirectTo;
     } catch (error) {
+      console.error("LOGIN THUNK ERROR:", error);
+      localStorage.removeItem("isMasterAdmin");
       toast.error(error || "Login Failed. Please check your credentials.");
     }
+  };
+
+  const onError = (errors) => {
+    console.log("Form Validation Errors:", errors);
   };
 
   const isButtonDisabled = isLoading || isSubmitting;
@@ -58,7 +86,7 @@ const Login = () => {
       </div>
 
       {/* Form Section */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+      <form onSubmit={handleSubmit(onSubmit, onError)} className="space-y-5" noValidate>
         {/* Email Field */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1.5">

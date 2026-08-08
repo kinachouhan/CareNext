@@ -49,24 +49,18 @@ const AppRoute = () => {
   }, [dispatch]);
 
   const router = createBrowserRouter([
-    {
-      path: "/admin",
-      element: <ProtectedRoute />, 
-      children: [
-        {
-          path: "",
-          element: <AdminLayout />,
-          children: [
-            { path: "", element: <AdminDashboard /> },
-            { path: "add-product", element: <AddProducts /> },
-            { path: "edit-product/:id", element: <EditProduct /> },
-            { path: "products", element: <AllProducts /> },
-            { path: "orders", element: <AllOrders /> },
-            { path: "orders/:id", element: <OrderSummary /> },
-          ],
-        },
-      ],
-    },
+   {
+  path: "/admin",
+  element: <AdminLayout />, // AdminLayout handles its own security
+  children: [
+    { path: "", element: <AdminDashboard /> },
+    { path: "add-product", element: <AddProducts /> },
+    { path: "edit-product/:id", element: <EditProduct /> },
+    { path: "products", element: <AllProducts /> },
+    { path: "orders", element: <AllOrders /> },
+    { path: "orders/:id", element: <OrderSummary /> },
+  ],
+},
 
 
     {
