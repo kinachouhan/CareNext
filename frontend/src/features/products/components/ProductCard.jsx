@@ -1,19 +1,16 @@
-import { Heart, ShoppingCart } from "lucide-react";
+import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { Link } from "react-router";
-import { addToCart, openCart } from "../../../slice/cart/cartSlice";
-import { useDispatch } from "react-redux";
+import useCart from "../../cart/hooks/useCart";
 
 const ProductCard = ({ product }) => {
   const price = product?.price || 0;
   const discount = product?.discount || 0;
   const finalPrice = Math.round(price - (price * discount) / 100);
-  const dispatch = useDispatch()
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    dispatch(addToCart(product));
-    dispatch(openCart());
-    console.log("Added to cart:", product?.name);
-  };
+
+  const { addToCart, removeItem, isInCart } = useCart();
+  
+  const productId = product?._id || product?.id;
+  const alreadyInCart = isInCart(productId);
 
   const handleWishlist = (e) => {
     e.preventDefault();
@@ -44,7 +41,7 @@ const ProductCard = ({ product }) => {
 
       {/* SINGLE LINK WRAPPING THE ENTIRE PRODUCT INFO */}
       <Link
-        to={`/shop/${product._id}`}
+        to={`/shop/${productId}`}
         className="flex flex-col flex-1 group/link"
       >
         {/* Image Area */}
@@ -79,15 +76,25 @@ const ProductCard = ({ product }) => {
         </div>
       </Link>
 
-      {/* Action Button Container (Kept outside the Link) */}
+      {/* Action Button Container (Dynamic: Add to Cart OR Remove from Cart) */}
       <div className="px-3 pb-3 md:px-5 md:pb-5 pt-0 mt-auto">
-        <button
-          onClick={handleAddToCart}
-          className="w-full bg-[#06A1B7] hover:bg-[#058b9e] text-white rounded-[10px] md:rounded-xl py-2 md:py-3 flex items-center justify-center gap-1.5 md:gap-2 text-sm md:text-base font-semibold shadow-sm md:shadow-cyan-500/20 transition-all active:scale-95"
-        >
-          <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-          Add to Cart
-        </button>
+        {alreadyInCart ? (
+          <button
+            onClick={() => removeItem(product)}
+            className="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-[10px] md:rounded-xl py-2 md:py-3 flex items-center justify-center gap-1.5 md:gap-2 text-sm md:text-base font-semibold transition-all active:scale-95"
+          >
+            <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
+            Remove from Cart
+          </button>
+        ) : (
+          <button
+            onClick={() => addToCart(product)}
+            className="w-full bg-[#06A1B7] hover:bg-[#058b9e] text-white rounded-[10px] md:rounded-xl py-2 md:py-3 flex items-center justify-center gap-1.5 md:gap-2 text-sm md:text-base font-semibold shadow-sm md:shadow-cyan-500/20 transition-all active:scale-95"
+          >
+            <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
+            Add to Cart
+          </button>
+        )}
       </div>
     </div>
   );

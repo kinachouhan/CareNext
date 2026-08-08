@@ -16,6 +16,7 @@ import Loader from "../../../shared/components/Loader";
 import { getProductByIdThunk } from "../../../slice/product/productThunk";
 import EmptyProducts from "../components/EmptyProducts";
 import RelatedProducts from "../components/RelatedProducts"; 
+import useCart from "../../cart/hooks/useCart";
 
 const SingleProduct = () => {
   const { id } = useParams();
@@ -24,6 +25,9 @@ const SingleProduct = () => {
   const { selectedProduct: product, isLoading } = useSelector(
     (state) => state.product
   );
+  
+   const { addToCart, removeItem, isInCart } = useCart(); 
+
 
   useEffect(() => {
     if (id) {
@@ -157,6 +161,8 @@ const SingleProduct = () => {
                   
                   {/* Add to Cart */}
                   <button
+
+                   onClick={()=>addToCart(product)}
                     disabled={product.stock === 0}
                     className="flex-1 bg-cyan-50/50 hover:bg-cyan-50 border-2 border-[#06A1B7] text-[#06A1B7] py-3 md:py-3.5 rounded-xl font-bold flex items-center justify-center gap-1.5 md:gap-2 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
                   >

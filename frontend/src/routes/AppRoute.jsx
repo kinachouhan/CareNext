@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router"; 
 
 // Admin Imports
@@ -21,13 +21,33 @@ import ProfilePage from "./../features/profile/ui/ProfilePage";
 
 // Auth & Security Imports
 import AuthLayout from "../app/layout/AuthLayout";
-import Login from "../features/auth/ui/pages/Login";
-import Register from "../features/auth/ui/pages/Register";
+import Login from "../features/auth/pages/Login";
+import Register from "../features/auth/pages/Register";
 import ProtectedRoute from "./ProtectedRoute";
+import Cart from "../features/cart/page/Cart";
+import { useDispatch, useSelector } from "react-redux";
+import { getCartThunk } from "../slice/cart/cartThunk";
+import { getMeThunk } from "../slice/auth/authThunk";
 
 
 
 const AppRoute = () => {
+
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+
+
+  useEffect(() => {
+    dispatch(getMeThunk())
+      .unwrap()
+      .then(() => {
+        dispatch(getCartThunk());
+      })
+      .catch(() => {
+         
+      });
+  }, [dispatch]);
+
   const router = createBrowserRouter([
     {
       path: "/admin",
@@ -58,7 +78,7 @@ const AppRoute = () => {
         { path: "shop/:id", element: <SingleProduct /> },
         { path: "about", element: <About /> },
         { path: "contact", element: <Contact /> },
-  
+        {path:"cart" , element: <Cart/>},
         {
           element: <ProtectedRoute />, 
           children: [
