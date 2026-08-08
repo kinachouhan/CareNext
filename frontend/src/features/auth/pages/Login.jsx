@@ -30,11 +30,10 @@ const Login = () => {
     setShowPassword((prev) => !prev);
   }, []);
 
-  // 🚀 REACTIVE ROUTING: Automatically triggers the exact millisecond Redux gets the user
   useEffect(() => {
     if (user) {
       const userEmail = user.email?.toLowerCase().trim() || "";
-      const masterAdminEmail = "darpan@gmail.com";
+      const masterAdminEmail = import.meta.env.VITE_MASTER_ADMIN_EMAIL;
 
       if (userEmail === masterAdminEmail) {
         localStorage.setItem("isMasterAdmin", "true");
@@ -49,15 +48,11 @@ const Login = () => {
   const onSubmit = async (formData) => {
     try {
       const inputEmail = formData.email?.toLowerCase().trim();
-      const masterAdminEmail = "darpan@gmail.com";
-
+      const masterAdminEmail = import.meta.env.VITE_MASTER_ADMIN_EMAIL;
       if (inputEmail === masterAdminEmail) {
         localStorage.setItem("isMasterAdmin", "true");
       }
-
-      // Just dispatch the login thunk. The useEffect above handles the navigation seamlessly!
       await dispatch(loginThunk(formData)).unwrap();
-
       toast.success("Welcome Back!");
       dispatch(getCartThunk());
     } catch (error) {
