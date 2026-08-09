@@ -7,7 +7,7 @@ export const buildProductFormData = (data) => {
     subCategory: data.subCategory,
     price: data.price,
     discount: data.discount || 0,
-    stock: data.stock,
+    stock: data.stock || 0,
     unit: data.unit,
     shortDescription: data.shortDescription,
     fullDescription: data.fullDescription,

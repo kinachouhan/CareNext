@@ -33,6 +33,7 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: [true, "Stock is required"],
       min: 0,
+      default: 0
     },
 
     unit: {

@@ -35,7 +35,7 @@ const Home = () => {
       </div>
 
       {/* DYNAMIC CATEGORY SECTIONS */}
-      <div className="max-w-[1400px] mx-auto px-4 mt-8 md:mt-12 space-y-12 md:space-y-16">
+      <div className="max-w-7xl mx-auto px-4 mt-8 md:mt-12 space-y-12 md:space-y-16">
         {categoryData.map((item) => (
           <CategorySection
             key={item.name}

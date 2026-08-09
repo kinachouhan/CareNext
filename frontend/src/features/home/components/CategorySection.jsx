@@ -7,7 +7,7 @@ const CategorySection = ({
   title,
   products = [],
   category,
-  limit = 4,
+  limit = 4, // Maximum limit for desktop
 }) => {
   const categoryProducts = useMemo(() => {
     if (!products.length || !category) return [];
@@ -50,9 +50,11 @@ const CategorySection = ({
         </Link>
       </div>
 
-      {/* PRODUCT GRID */}
+      {/* PRODUCT GRID: Hides items from index 2 and above on mobile screens (sm and below) */}
       <div className="w-full">
-        <ProductGrid products={categoryProducts} />
+        <div className="[&>*:nth-child(n+3)]:hidden sm:[&>*:nth-child(n+3)]:block">
+          <ProductGrid products={categoryProducts} />
+        </div>
       </div>
 
     </section>

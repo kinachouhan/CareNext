@@ -48,7 +48,7 @@ const AdminNavbar = ({ onToggleSidebar }) => {
             <UserCircle2 size={32} className="text-[#06A1B7]" />
             <div className="hidden sm:block text-left">
               <h2 className="font-bold text-gray-800 text-sm leading-tight">
-                Kina
+                Darpan
               </h2>
               <span className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold block mt-0.5">
                 Admin
