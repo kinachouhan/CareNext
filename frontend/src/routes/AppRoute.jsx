@@ -28,6 +28,7 @@ import Cart from "../features/cart/page/Cart";
 import { useDispatch, useSelector } from "react-redux";
 import { getCartThunk } from "../slice/cart/cartThunk";
 import { getMeThunk } from "../slice/auth/authThunk";
+import Wishlist from "../features/wishlist/page/Wishlist";
 
 
 
@@ -73,6 +74,7 @@ const AppRoute = () => {
         { path: "about", element: <About /> },
         { path: "contact", element: <Contact /> },
         {path:"cart" , element: <Cart/>},
+        {path:"wishlist" , element: <Wishlist/>},
         {
           element: <ProtectedRoute />, 
           children: [

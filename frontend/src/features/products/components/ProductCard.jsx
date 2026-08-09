@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Heart, ShoppingCart, Trash2, Loader2 } from "lucide-react";
 import { Link } from "react-router";
 import useCart from "../../cart/hooks/useCart";
+import { useWishlist } from "../../wishlist/hooks/useWishlist";
 
 const ProductCard = ({ product }) => {
   const price = product?.price || 0;
@@ -13,13 +14,17 @@ const ProductCard = ({ product }) => {
   const productId = product?._id || product?.id;
   const alreadyInCart = isInCart(productId);
 
-  // Local loading state to make button clicks feel instant and responsive
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleWishlist = (e) => {
-    e.preventDefault();
-    console.log("Added to wishlist:", product?.name);
-  };
+  const { isInWishlist, toggleWishlist } = useWishlist();
+const isWishlisted = isInWishlist(productId);
+
+const handleWishlist = (e) => {
+  e.preventDefault();
+  toggleWishlist(product);
+};
+
+
 
   const handleCartAction = async (e) => {
     e.preventDefault();
@@ -56,11 +61,16 @@ const ProductCard = ({ product }) => {
       >
         <Heart
           size={16}
-          className="text-gray-400 group-hover/heart:text-red-500 group-hover/heart:fill-red-500 md:w-5 md:h-5 transition-colors"
+          className={`transition-colors ${
+    isWishlisted 
+      ? "text-red-500 fill-red-500" 
+      : "text-gray-400 group-hover/heart:text-red-500"
+  }`}
+          // className="text-gray-400 group-hover/heart:text-red-500 group-hover/heart:fill-red-500 md:w-5 md:h-5 transition-colors"
         />
       </button>
 
-      {/* SINGLE LINK WRAPPING THE ENTIRE PRODUCT INFO */}
+     
       <Link
         to={`/shop/${productId}`}
         className="flex flex-col flex-1 group/link"

@@ -119,7 +119,6 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* Google Map */}
 
       <section className="max-w-7xl mx-auto px-5 pb-20">
         <div className="rounded-3xl overflow-hidden shadow-lg">
