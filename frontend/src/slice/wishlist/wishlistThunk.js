@@ -25,7 +25,7 @@ export const getWishlistThunk = createAsyncThunk(
   }
 );
 
-// Toggle wishlist item (DB for users, LocalStorage for guests)
+
 export const toggleWishlistThunk = createAsyncThunk(
   "wishlist/toggle",
   async (product, { getState, rejectWithValue }) => {
