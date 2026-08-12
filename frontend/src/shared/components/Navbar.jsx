@@ -3,9 +3,9 @@ import { NavLink, useNavigate } from "react-router";
 import { ShoppingCart, User, Heart, Menu, X, LogIn, LogOut } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { openCart } from "../../slice/cart/cartSlice";
-import { logout } from "../../slice/auth/authSlice";
 import api from "../../api/axios";
 import { useWishlist } from "../../features/wishlist/hooks/useWishlist"; // Ensure this path is correct
+import { logoutThunk } from "../../slice/auth/authThunk";
 
 const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
@@ -31,15 +31,9 @@ const Navbar = () => {
 
   const handleCartClick = () => dispatch(openCart());
 
-  const handleLogout = async () => {
-    try {
-      await api.post("/auth/logout");
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      dispatch(logout());
+  const handleLogout =  () => {
+      dispatch(logoutThunk())
       navigate("/auth/login");
-    }
   };
 
   return (

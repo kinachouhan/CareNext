@@ -29,6 +29,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { getCartThunk } from "../slice/cart/cartThunk";
 import { getMeThunk } from "../slice/auth/authThunk";
 import Wishlist from "../features/wishlist/page/Wishlist";
+import { getWishlistThunk } from "../slice/wishlist/wishlistThunk";
+import Orders from "../features/orders/ui/Orders";
+import SavedAddresses from "../features/address/page/SaveAddresses";
+import CheckoutPage from "../features/checkout/page/CheckoutPage";
+import UpiPaymentPage from "../features/checkout/page/UpiPaymentPage";
+import OrderDetailsPage from "../features/orders/ui/OrderDetails";
 
 
 
@@ -43,6 +49,7 @@ const AppRoute = () => {
       .unwrap()
       .then(() => {
         dispatch(getCartThunk());
+        dispatch(getWishlistThunk())
       })
       .catch(() => {
          
@@ -52,7 +59,7 @@ const AppRoute = () => {
   const router = createBrowserRouter([
    {
   path: "/admin",
-  element: <AdminLayout />, // AdminLayout handles its own security
+  element: <AdminLayout />,
   children: [
     { path: "", element: <AdminDashboard /> },
     { path: "add-product", element: <AddProducts /> },
@@ -79,10 +86,13 @@ const AppRoute = () => {
           element: <ProtectedRoute />, 
           children: [
             { path: "profile", element: <ProfilePage /> },
+            {path: "order" , element: <Orders/>},
+            {path: "addresses" , element: <SavedAddresses/>},
+            {path: "checkout" , element: <CheckoutPage/>},
+            {path :"checkout/upi" , element: <UpiPaymentPage/>},
+            {path: "order/:id" , element: <OrderDetailsPage /> }
           ],
         },
-
-    
       ],
     },
 

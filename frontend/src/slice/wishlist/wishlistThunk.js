@@ -3,20 +3,15 @@ import axios from "axios";
 import api from "../../api/axios";
 
 
-
 export const getWishlistThunk = createAsyncThunk(
   "wishlist/get",
   async (_, { getState, rejectWithValue }) => {
     try {
       const { auth } = getState();
-      
-      // If user is logged in, fetch from backend
       if (auth?.user) {
         const response = await api.get("/wishlist", { withCredentials: true });
         return response.data.wishlist.products;
       } 
-      
-      // If guest, load from localStorage
       const localData = localStorage.getItem("guest_wishlist");
       return localData ? JSON.parse(localData) : [];
     } catch (error) {
@@ -24,7 +19,6 @@ export const getWishlistThunk = createAsyncThunk(
     }
   }
 );
-
 
 export const toggleWishlistThunk = createAsyncThunk(
   "wishlist/toggle",
@@ -71,12 +65,25 @@ export const clearWishlistThunk = createAsyncThunk(
     try {
       const { auth } = getState();
       if (auth?.user) {
-        await axios.delete(`${API_URL}/clear`, { withCredentials: true });
+        await api.delete("/clear", { withCredentials: true });
       }
       localStorage.removeItem("guest_wishlist");
       return [];
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to clear wishlist");
+    }
+  }
+);
+
+export const syncWishlistThunk = createAsyncThunk(
+  "wishlist/sync",
+  async (guestItems, { rejectWithValue }) => {
+    try {
+      const productIds = guestItems.map((item) => item._id || item.id || item);
+      const response = await api.post("/wishlist/sync", { productIds }, { withCredentials: true });
+      return response.data.wishlist.products;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to sync wishlist");
     }
   }
 );

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ShoppingCart,
   Heart,
@@ -6,10 +6,11 @@ import {
   CheckCircle,
   Package,
   Zap,
-  Star
+  Star,
+  Loader2
 } from "lucide-react";
 
-import { Link, useParams } from "react-router"; 
+import { Link, useParams, useNavigate } from "react-router"; 
 import { useDispatch, useSelector } from "react-redux";
 
 import Loader from "../../../shared/components/Loader";
@@ -17,17 +18,25 @@ import { getProductByIdThunk } from "../../../slice/product/productThunk";
 import EmptyProducts from "../components/EmptyProducts";
 import RelatedProducts from "../components/RelatedProducts"; 
 import useCart from "../../cart/hooks/useCart";
+import { useWishlist } from "../../wishlist/hooks/useWishlist";
 
 const SingleProduct = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const { selectedProduct: product, isLoading } = useSelector(
     (state) => state.product
   );
   
-   const { addToCart, removeItem, isInCart } = useCart(); 
+  const { addToCart, isInCart } = useCart(); 
+  const { isInWishlist, toggleWishlist } = useWishlist();
 
+  const productId = product?._id || product?.id;
+  const alreadyInCart = isInCart(productId);
+  const isWishlisted = isInWishlist(productId);
+
+  const [cartLoading, setCartLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -36,13 +45,52 @@ const SingleProduct = () => {
     }
   }, [dispatch, id]); 
 
-  // OPTIMIZATION: Only recalculate if price or discount specifically change
   const finalPrice = useMemo(() => {
     if (!product?.price) return 0;
     const price = Number(product.price);
     const discount = Number(product.discount || 0);
     return Math.round(price - (price * discount) / 100);
   }, [product?.price, product?.discount]);
+
+  const handleCartAction = async () => {
+    if (cartLoading) return;
+    setCartLoading(true);
+    try {
+      if (!alreadyInCart) {
+        await addToCart(product);
+      } else {
+        navigate("/shop");
+      }
+    } catch (error) {
+      console.error("Cart action failed:", error);
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+  // const handleBuyNow = async () => {
+  //   if (product?.stock === 0) return;
+  //   if (!alreadyInCart) {
+  //     await addToCart(product);
+  //   }
+  //   navigate("/checkout");
+  // };
+
+  const handleBuyNow = () => {
+    if (product?.stock === 0) return;
+
+  
+    const instantCheckoutItem = {
+      product: product._id || product.id,
+      name: product.name,
+      price: finalPrice, // Uses your calculated discounted price
+      quantity: 1,
+      image: product.image,
+    };
+
+  
+    navigate("/checkout", { state: { buyNowItem: instantCheckoutItem } });
+  };
 
   if (isLoading) return <Loader text="Loading Product..." />;
 
@@ -55,7 +103,6 @@ const SingleProduct = () => {
   }
 
   return (
-    // OPTIMIZATION: Use semantic <main> for better SEO
     <main className="min-h-screen bg-[#F5F7FB] pb-20 pt-4 md:pt-8">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6">
         
@@ -92,7 +139,7 @@ const SingleProduct = () => {
                 <img
                   src={product.image}
                   alt={product.name}
-                  fetchPriority="high" // OPTIMIZATION: Prioritize this image for LCP
+                  fetchPriority="high"
                   decoding="async"
                   className="w-full h-full object-contain drop-shadow-sm"
                 />
@@ -106,7 +153,6 @@ const SingleProduct = () => {
                 {product.subCategory}
               </span>
 
-              {/* OPTIMIZATION: text-balance prevents awkward widowed words on new lines */}
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-2 text-balance">
                 {product.name}
               </h1>
@@ -155,24 +201,27 @@ const SingleProduct = () => {
                 )}
               </div>
 
-              {/* ACTION BUTTONS (Side by Side) */}
+              {/* ACTION BUTTONS */}
               <div className="flex gap-3 md:gap-4 mt-8 pt-6 border-t border-gray-100">
                 <div className="flex flex-1 gap-2 sm:gap-3">
                   
-                  {/* Add to Cart */}
+                  {/* Add To Cart Button */}
                   <button
-
-                   onClick={()=>addToCart(product)}
-                    disabled={product.stock === 0}
+                    onClick={handleCartAction}
+                    disabled={product.stock === 0 || cartLoading}
                     className="flex-1 bg-cyan-50/50 hover:bg-cyan-50 border-2 border-[#06A1B7] text-[#06A1B7] py-3 md:py-3.5 rounded-xl font-bold flex items-center justify-center gap-1.5 md:gap-2 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
                   >
-                    <ShoppingCart size={18} className="shrink-0" />
-                    <span className="hidden sm:block">Add To Cart</span>
-                    <span className="sm:hidden">Cart</span>
+                    {cartLoading ? (
+                      <Loader2 size={18} className="animate-spin shrink-0" />
+                    ) : (
+                      <ShoppingCart size={18} className="shrink-0" />
+                    )}
+                    <span>{alreadyInCart ? "Go To Cart" : "Add To Cart"}</span>
                   </button>
 
-                  {/* Buy Now */}
+                  {/* Buy Now Button */}
                   <button
+                    onClick={handleBuyNow}
                     disabled={product.stock === 0}
                     className="flex-1 bg-[#06A1B7] hover:bg-[#058da2] text-white py-3 md:py-3.5 rounded-xl font-bold flex items-center justify-center gap-1.5 md:gap-2 shadow-sm shadow-cyan-500/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
                   >
@@ -181,12 +230,20 @@ const SingleProduct = () => {
                   </button>
                 </div>
 
-                {/* Wishlist */}
+                {/* Wishlist Button */}
                 <button
+                  onClick={() => toggleWishlist(product)}
                   aria-label="Add to Wishlist"
                   className="w-12 sm:w-14 shrink-0 border border-gray-200 bg-white rounded-xl flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all active:scale-95 group"
                 >
-                  <Heart size={22} className="group-hover:fill-red-500 transition-colors" />
+                  <Heart
+                    size={22}
+                    className={`transition-colors ${
+                      isWishlisted 
+                        ? "text-red-500 fill-red-500" 
+                        : "text-gray-400 group-hover:text-red-500 group-hover:fill-red-500"
+                    }`}
+                  />
                 </button>
               </div>
 

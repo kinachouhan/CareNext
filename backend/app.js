@@ -5,6 +5,8 @@ import authRoute from "./routes/authRoute.js"
 import cartRoutes from "./routes/cartRoute.js"
 import cookieParser from "cookie-parser";
 import wishlistRoutes from "./routes/wishlistRoute.js";
+import addressRoute from "./routes/addressRoute.js"
+import orderRoute from "./routes/orderRoute.js"
 
 const app = express();
 
@@ -23,6 +25,8 @@ app.use("/api/auth", authRoute);
 app.use("/api/products", productRoute);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/addresses", addressRoute)
+app.use("/api/orders", orderRoute)
 
 app.get("/", (req, res) => {
   res.json({

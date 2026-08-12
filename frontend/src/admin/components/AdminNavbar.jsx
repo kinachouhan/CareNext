@@ -1,7 +1,7 @@
 import { Menu, UserCircle2, LogOut } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router"; 
-import { logout } from "../../slice/auth/authSlice";
+import { logoutThunk } from "../../slice/auth/authThunk";
 
 const AdminNavbar = ({ onToggleSidebar }) => {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ const AdminNavbar = ({ onToggleSidebar }) => {
 
   const handleLogout = () => {
     localStorage.removeItem("isMasterAdmin");
-    dispatch(logout())
+    dispatch(logoutThunk())
     navigate("/auth/login", { replace: true });
   };
 
@@ -35,19 +35,20 @@ const AdminNavbar = ({ onToggleSidebar }) => {
           />
         </div>
 
+        {/* Center: Title (Desktop only) */}
         <div className="hidden lg:block text-[#06A1B7] font-bold text-center absolute left-1/2 -translate-x-1/2">
           <h1 className="text-xl tracking-wide">Admin Panel</h1>
         </div>
 
-      
+        {/* Right Side: Profile & Logout */}
         <div className="flex items-center gap-3 sm:gap-5">
           
-
+          {/* Profile Badge */}
           <div className="flex items-center gap-3 p-1.5 pr-4 rounded-xl bg-gray-50 border border-gray-100">
             <UserCircle2 size={32} className="text-[#06A1B7]" />
             <div className="hidden sm:block text-left">
               <h2 className="font-bold text-gray-800 text-sm leading-tight">
-                kina
+                Darpan
               </h2>
               <span className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold block mt-0.5">
                 Admin
