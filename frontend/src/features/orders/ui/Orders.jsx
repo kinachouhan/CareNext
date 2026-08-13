@@ -7,16 +7,17 @@ import { getOrdersThunk } from "../../../slice/order/orderThunk";
 
 const Orders = () => {
   const dispatch = useDispatch();
-  
-  // Pull orders, loading, and error states from your Redux store
-  const { orders = [], loading = false } = useSelector((state) => state.order || {});
+
+  const orders = useSelector((state) => state.orders?.orders) || [];
+  const loading = useSelector((state) => state.orders?.loading) || false;
 
   useEffect(() => {
     dispatch(getOrdersThunk());
   }, [dispatch]);
 
-  const getStatusBadge = (status) => {
-    switch (status) {
+  const getStatusBadge = (orderStatus, paymentStatus) => {
+    // Check order delivery status first
+    switch (orderStatus) {
       case "Delivered":
         return (
           <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">
@@ -24,9 +25,12 @@ const Orders = () => {
           </span>
         );
       case "Shipped":
+      case "Packed":
+      case "Confirmed":
+      case "Out For Delivery":
         return (
           <span className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">
-            <Truck size={14} /> Shipped
+            <Truck size={14} /> {orderStatus}
           </span>
         );
       case "Verification Required":
@@ -35,10 +39,25 @@ const Orders = () => {
             <AlertCircle size={14} /> Payment Verification
           </span>
         );
+      case "Cancelled":
+      case "Failed":
+        return (
+          <span className="flex items-center gap-1.5 bg-red-50 text-red-700 px-3 py-1 rounded-full text-xs font-bold">
+            <AlertCircle size={14} /> {orderStatus}
+          </span>
+        );
       default:
+        // Fallback to payment status if order status is Pending/Default
+        if (paymentStatus === "Completed") {
+          return (
+            <span className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold">
+              <CheckCircle2 size={14} /> Paid / Processing
+            </span>
+          );
+        }
         return (
           <span className="flex items-center gap-1.5 bg-cyan-50 text-[#06A1B7] px-3 py-1 rounded-full text-xs font-bold">
-            <Clock size={14} /> Order Placed / Pending
+            <Clock size={14} /> {orderStatus || "Order Placed / Pending"}
           </span>
         );
     }
@@ -54,7 +73,7 @@ const Orders = () => {
 
   if (!orders || orders.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-24 text-center">
+      <div className="max-w-4xl mx-auto px-4 py-10 text-center">
         <div className="w-20 h-20 bg-cyan-50 text-[#06A1B7] rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
           <Package size={36} />
         </div>
@@ -72,7 +91,7 @@ const Orders = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12 mt-16 md:mt-20">
+    <div className="max-w-5xl mx-auto px-4 py-12">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900">My Orders</h1>
@@ -103,7 +122,7 @@ const Orders = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                {getStatusBadge(order.orderStatus || order.paymentStatus)}
+                {getStatusBadge(order.orderStatus, order.paymentStatus)}
                 <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-cyan-50 group-hover:text-[#06A1B7] transition-colors">
                   <ChevronRight size={16} />
                 </div>
@@ -112,7 +131,7 @@ const Orders = () => {
 
             {/* Order Items List */}
             <div className="p-6 divide-y divide-gray-50">
-              {order.orderItems.map((item, idx) => (
+              {order.orderItems?.map((item, idx) => (
                 <div key={idx} className="py-4 first:pt-0 last:pb-0 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <img 

@@ -61,3 +61,18 @@ export const logoutThunk = createAsyncThunk(
     }
   }
 );
+
+
+export const updateProfileThunk = createAsyncThunk(
+  "auth/updateProfile",
+  async (formData, thunkAPI) => {
+    try {
+      const response = await api.put("/auth/update-profile", formData, { withCredentials: true });
+      return response.data.user || response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to update profile"
+      );
+    }
+  }
+);

@@ -10,7 +10,7 @@ import {
   Loader2
 } from "lucide-react";
 
-import { Link, useParams, useNavigate } from "react-router"; 
+import { Link, useParams, useNavigate, useLocation } from "react-router"; 
 import { useDispatch, useSelector } from "react-redux";
 
 import Loader from "../../../shared/components/Loader";
@@ -19,11 +19,16 @@ import EmptyProducts from "../components/EmptyProducts";
 import RelatedProducts from "../components/RelatedProducts"; 
 import useCart from "../../cart/hooks/useCart";
 import { useWishlist } from "../../wishlist/hooks/useWishlist";
+import toast from "react-hot-toast";
 
 const SingleProduct = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check user authentication state from Redux
+  const { user, isAuthenticated } = useSelector((state) => state.auth || {});
 
   const { selectedProduct: product, isLoading } = useSelector(
     (state) => state.product
@@ -37,6 +42,7 @@ const SingleProduct = () => {
   const isWishlisted = isInWishlist(productId);
 
   const [cartLoading, setCartLoading] = useState(false);
+  const [buyNowLoading, setBuyNowLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -52,14 +58,27 @@ const SingleProduct = () => {
     return Math.round(price - (price * discount) / 100);
   }, [product?.price, product?.discount]);
 
+  // Helper to verify authentication
+  const checkAuth = () => {
+    if (!user && !isAuthenticated) {
+      toast.error("Please login to continue");
+      navigate("/login", { state: { from: location.pathname } });
+      return false;
+    }
+    return true;
+  };
+
   const handleCartAction = async () => {
+    if (!checkAuth()) return; // Stop if not logged in
+    
     if (cartLoading) return;
     setCartLoading(true);
     try {
       if (!alreadyInCart) {
         await addToCart(product);
+        toast.success("Added to cart");
       } else {
-        navigate("/shop");
+        navigate("/cart");
       }
     } catch (error) {
       console.error("Cart action failed:", error);
@@ -70,26 +89,35 @@ const SingleProduct = () => {
 
   // const handleBuyNow = async () => {
   //   if (product?.stock === 0) return;
-  //   if (!alreadyInCart) {
-  //     await addToCart(product);
+  //   if (!checkAuth()) return; // Redirect to login if user is guest
+
+  //   setBuyNowLoading(true);
+  //   try {
+  //     if (!alreadyInCart) {
+  //       await addToCart(product);
+  //     }
+  //     // Navigate directly to checkout page
+  //     navigate("/checkout");
+  //   } catch (error) {
+  //     toast.error("Failed to proceed to checkout");
+  //   } finally {
+  //     setBuyNowLoading(false);
   //   }
-  //   navigate("/checkout");
   // };
 
   const handleBuyNow = () => {
     if (product?.stock === 0) return;
+    if (!checkAuth()) return; // Redirect if guest
 
-  
-    const instantCheckoutItem = {
+    const buyNowItem = {
       product: product._id || product.id,
       name: product.name,
-      price: finalPrice, // Uses your calculated discounted price
+      price: finalPrice, 
       quantity: 1,
       image: product.image,
     };
 
-  
-    navigate("/checkout", { state: { buyNowItem: instantCheckoutItem } });
+    navigate("/checkout", { state: { buyNowItem } });
   };
 
   if (isLoading) return <Loader text="Loading Product..." />;
@@ -157,7 +185,7 @@ const SingleProduct = () => {
                 {product.name}
               </h1>
 
-              {/* Simple Star Rating */}
+              {/* Star Rating */}
               <div className="flex items-center gap-1 mb-4">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star key={star} size={16} className="fill-yellow-400 text-yellow-400" />
@@ -222,17 +250,23 @@ const SingleProduct = () => {
                   {/* Buy Now Button */}
                   <button
                     onClick={handleBuyNow}
-                    disabled={product.stock === 0}
+                    disabled={product.stock === 0 || buyNowLoading}
                     className="flex-1 bg-[#06A1B7] hover:bg-[#058da2] text-white py-3 md:py-3.5 rounded-xl font-bold flex items-center justify-center gap-1.5 md:gap-2 shadow-sm shadow-cyan-500/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
                   >
-                    <Zap size={18} className="shrink-0" />
-                    Buy Now
+                    {buyNowLoading ? (
+                      <Loader2 size={18} className="animate-spin shrink-0" />
+                    ) : (
+                      <Zap size={18} className="shrink-0" />
+                    )}
+                    <span>Buy Now</span>
                   </button>
                 </div>
 
                 {/* Wishlist Button */}
                 <button
-                  onClick={() => toggleWishlist(product)}
+                  onClick={() => {
+                    if (checkAuth()) toggleWishlist(product);
+                  }}
                   aria-label="Add to Wishlist"
                   className="w-12 sm:w-14 shrink-0 border border-gray-200 bg-white rounded-xl flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 transition-all active:scale-95 group"
                 >

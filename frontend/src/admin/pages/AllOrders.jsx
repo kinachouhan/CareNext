@@ -1,23 +1,45 @@
-import { Search, Eye, Pencil, Plus, Inbox } from "lucide-react";
+import { Search, Eye, Plus, Inbox } from "lucide-react";
 import { Link } from "react-router"; 
-import { useState } from "react";
-import { orders } from "../../lib/order";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllAdminOrdersThunk, updateOrderStatusThunk, updatePaymentStatusThunk } from "../../slice/order/orderThunk";
+import Pagination from "../components/Pagination"; 
 
 const AllOrders = () => {
+  const dispatch = useDispatch();
+  const ordersState = useSelector((state) => state.orders?.orders);
+  const orders = Array.isArray(ordersState) ? ordersState : [];
+  const loading = useSelector((state) => state.orders?.loading) || false;
+  const totalPages = useSelector((state) => state.orders?.totalPages) || 1;
+  const totalOrders = useSelector((state) => state.orders?.totalOrders) || 0;
+
+  const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("");
   const [deliveryFilter, setDeliveryFilter] = useState("");
 
+  useEffect(() => {
+    dispatch(getAllAdminOrdersThunk(currentPage));
+  }, [dispatch, currentPage]);
+
+  const handleOrderStatusChange = (id, newStatus) => {
+    dispatch(updateOrderStatusThunk({ id, orderStatus: newStatus }));
+  };
+
+  const handlePaymentStatusChange = (id, newStatus) => {
+    dispatch(updatePaymentStatusThunk({ id, paymentStatus: newStatus }));
+  };
+
   const filteredOrders = orders.filter((order) => {
+    const orderId = order._id || "";
+    const customerName = order.user?.name || order.shippingAddress?.fullName || "";
+
     const matchesSearch =
-      order.id.toLowerCase().includes(search.toLowerCase()) ||
-      order.customer.toLowerCase().includes(search.toLowerCase());
+      orderId.toLowerCase().includes(search.toLowerCase()) ||
+      customerName.toLowerCase().includes(search.toLowerCase());
 
-    const matchesPayment =
-      paymentFilter === "" || order.payment === paymentFilter;
-
-    const matchesDelivery =
-      deliveryFilter === "" || order.delivery === deliveryFilter;
+    const matchesPayment = paymentFilter === "" || order.paymentStatus === paymentFilter;
+    const matchesDelivery = deliveryFilter === "" || order.orderStatus === deliveryFilter;
 
     return matchesSearch && matchesPayment && matchesDelivery;
   });
@@ -28,6 +50,7 @@ const AllOrders = () => {
       case "Delivered":
         return "bg-green-100 text-green-700";
       case "Pending":
+      case "Verification Required":
       case "Packed":
         return "bg-yellow-100 text-yellow-700";
       case "Shipped":
@@ -40,14 +63,24 @@ const AllOrders = () => {
     }
   };
 
+  if (loading && orders.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-4 border-[#06A1B7] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const limit = 10;
+  const indexOfFirstProduct = (currentPage - 1) * limit;
+  const indexOfLastProduct = currentPage * limit;
+
   return (
     <div className="min-h-screen bg-[#F5F7FB] p-3 sm:p-4 md:p-6 pb-20">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 md:mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Orders</h1>
-          <p className="text-sm md:text-base text-gray-500 mt-1">
-            Manage customer orders
-          </p>
+          <p className="text-sm md:text-base text-gray-500 mt-1">Manage customer orders and update tracking states</p>
         </div>
 
         <Link
@@ -59,21 +92,16 @@ const AllOrders = () => {
         </Link>
       </div>
 
-      {/* Filters (Optimized for Mobile Grid) */}
+      {/* Filters */}
       <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm mb-4 md:mb-6">
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-          
-          {/* Search spans full width on mobile, 1 column on desktop */}
           <div className="relative col-span-2 lg:col-span-1">
-            <Search
-              size={18}
-              className="absolute left-3.5 top-3.5 text-gray-400"
-            />
+            <Search size={18} className="absolute left-3.5 top-3.5 text-gray-400" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search ID or Customer..."
-              className="w-full border border-gray-200 bg-gray-50 rounded-xl pl-10 pr-4 py-3 md:py-3 focus:ring-2 focus:ring-[#06A1B7] outline-none transition-all text-sm md:text-base"
+              className="w-full border border-gray-200 bg-gray-50 rounded-xl pl-10 pr-4 py-3 md:py-3 focus:ring-2 focus:ring-[#06A1B7] outline-none text-sm md:text-base"
             />
           </div>
 
@@ -83,9 +111,9 @@ const AllOrders = () => {
             className="col-span-1 border border-gray-200 bg-gray-50 rounded-xl p-3 md:py-3 focus:ring-2 focus:ring-[#06A1B7] outline-none cursor-pointer text-sm md:text-base"
           >
             <option value="">All Payments</option>
-            <option>Completed</option>
-            <option>Pending</option>
-            <option>Failed</option>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+            <option value="Failed">Failed</option>
           </select>
 
           <select
@@ -94,15 +122,15 @@ const AllOrders = () => {
             className="col-span-1 border border-gray-200 bg-gray-50 rounded-xl p-3 md:py-3 focus:ring-2 focus:ring-[#06A1B7] outline-none cursor-pointer text-sm md:text-base"
           >
             <option value="">All Deliveries</option>
-            <option>Delivered</option>
-            <option>Packed</option>
-            <option>Shipped</option>
-            <option>Cancelled</option>
+            <option value="Pending">Pending</option>
+            <option value="Verification Required">Verification Required</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
         </div>
       </div>
 
-      {/* Empty State Fallback */}
       {filteredOrders.length === 0 && (
         <div className="bg-white rounded-2xl shadow-sm p-10 flex flex-col items-center justify-center text-center">
           <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
@@ -122,41 +150,49 @@ const AllOrders = () => {
               <th className="text-left p-4 md:px-6 font-medium">Customer</th>
               <th className="text-left p-4 md:px-6 font-medium">Date</th>
               <th className="text-left p-4 md:px-6 font-medium">Total</th>
-              <th className="text-center p-4 md:px-6 font-medium">Payment</th>
-              <th className="text-center p-4 md:px-6 font-medium">Delivery</th>
+              <th className="text-center p-4 md:px-6 font-medium">Payment Status</th>
+              <th className="text-center p-4 md:px-6 font-medium">Order Status</th>
               <th className="text-center p-4 md:px-6 font-medium">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {filteredOrders.map((order) => (
-              <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="p-4 md:px-6 font-semibold text-gray-900">
-                  {order.id}
+              <tr key={order._id} className="hover:bg-gray-50/50 transition-colors">
+                <td className="p-4 md:px-6 font-mono font-semibold text-gray-900">#{order._id.slice(-8).toUpperCase()}</td>
+                <td className="p-4 md:px-6 text-gray-700">{order.user?.name || order.shippingAddress?.fullName || "N/A"}</td>
+                <td className="p-4 md:px-6 text-gray-500 text-sm">
+                  {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                 </td>
-                <td className="p-4 md:px-6 text-gray-700">{order.customer}</td>
-                <td className="p-4 md:px-6 text-gray-500 text-sm">{order.date}</td>
-                <td className="p-4 md:px-6 font-semibold text-gray-900">₹{order.total}</td>
+                <td className="p-4 md:px-6 font-semibold text-gray-900">₹{order.totalAmount}</td>
                 <td className="p-4 md:px-6 text-center">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${badgeColor(order.payment)}`}>
-                    {order.payment}
-                  </span>
+                  <select
+                    value={order.paymentStatus}
+                    onChange={(e) => handlePaymentStatusChange(order._id, e.target.value)}
+                    className={`border border-gray-200 rounded-lg p-1.5 text-xs font-bold outline-none cursor-pointer ${badgeColor(order.paymentStatus)}`}
+                  >
+                    <option value="Pending" className="bg-white text-gray-700">Pending</option>
+                    <option value="Completed" className="bg-white text-gray-700">Completed</option>
+                    <option value="Failed" className="bg-white text-gray-700">Failed</option>
+                  </select>
                 </td>
                 <td className="p-4 md:px-6 text-center">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${badgeColor(order.delivery)}`}>
-                    {order.delivery}
-                  </span>
+                  <select
+                    value={order.orderStatus}
+                    onChange={(e) => handleOrderStatusChange(order._id, e.target.value)}
+                    className={`border border-gray-200 rounded-lg p-1.5 text-xs font-bold outline-none cursor-pointer ${badgeColor(order.orderStatus)}`}
+                  >
+                    <option value="Pending" className="bg-white text-gray-700">Pending</option>
+                    <option value="Verification Required" className="bg-white text-gray-700">Verification Required</option>
+                    <option value="Shipped" className="bg-white text-gray-700">Shipped</option>
+                    <option value="Delivered" className="bg-white text-gray-700">Delivered</option>
+                    <option value="Cancelled" className="bg-white text-gray-700">Cancelled</option>
+                  </select>
                 </td>
-                <td className="p-4 md:px-6">
+                <td className="p-4 md:px-6 text-center">
                   <div className="flex justify-center gap-3">
-                    <Link
-                      to={`/admin/orders/${order.id}`}
-                      className="p-2 text-gray-400 hover:text-[#06A1B7] hover:bg-cyan-50 rounded-lg transition-colors"
-                    >
+                    <Link to={`/admin/orders/${order._id}`} className="p-2 text-gray-400 hover:text-[#06A1B7] hover:bg-cyan-50 rounded-lg transition-colors">
                       <Eye size={18} />
                     </Link>
-                    <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors">
-                      <Pencil size={18} />
-                    </button>
                   </div>
                 </td>
               </tr>
@@ -165,50 +201,17 @@ const AllOrders = () => {
         </table>
       </div>
 
-      {/* Mobile Cards (Structured for clarity) */}
-      <div className="lg:hidden flex flex-col gap-3 sm:gap-4">
-        {filteredOrders.map((order) => (
-          <div
-            key={order.id}
-            className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5"
-          >
-            {/* Card Header */}
-            <div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-50">
-              <div>
-                <span className="text-xs text-gray-400 font-medium block mb-0.5">{order.date}</span>
-                <h3 className="font-bold text-gray-900 text-base">{order.id}</h3>
-              </div>
-              <h3 className="font-bold text-[#06A1B7] text-lg">₹{order.total}</h3>
-            </div>
-
-            {/* Card Body */}
-            <div className="mb-4">
-              <p className="text-xs text-gray-500 mb-0.5">Customer</p>
-              <p className="font-medium text-gray-800">{order.customer}</p>
-            </div>
-
-            {/* Card Footer: Badges & Actions */}
-            <div className="flex items-center justify-between mt-2 pt-2">
-              <div className="flex gap-2 flex-wrap">
-                <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide uppercase ${badgeColor(order.payment)}`}>
-                  {order.payment}
-                </span>
-                <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wide uppercase ${badgeColor(order.delivery)}`}>
-                  {order.delivery}
-                </span>
-              </div>
-              
-              <Link
-                to={`/admin/orders/${order.id}`}
-                className="flex items-center justify-center p-2.5 bg-gray-50 text-gray-600 hover:text-[#06A1B7] hover:bg-cyan-50 rounded-xl transition-colors border border-gray-100"
-              >
-                <Eye size={18} />
-              </Link>
-            </div>
-          </div>
-        ))}
-      </div>
-
+      {/* Pagination Component Integration */}
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          indexOfFirstProduct={indexOfFirstProduct}
+          indexOfLastProduct={indexOfLastProduct}
+          totalProducts={totalOrders}
+        />
+      )}
     </div>
   );
 };

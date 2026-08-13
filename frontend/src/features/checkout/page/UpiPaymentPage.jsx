@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useDispatch } from "react-redux";
-import { Upload, CheckCircle2, ShieldCheck, Loader2, Copy, ArrowLeft } from "lucide-react";
+import { Upload, CheckCircle2, ShieldCheck, Loader2, Copy, ArrowLeft, Check, Package } from "lucide-react";
 import { placeOrderThunk } from "../../../slice/order/orderThunk";
 import { clearCart } from "../../../slice/cart/cartSlice";
 import toast from "react-hot-toast";
@@ -11,14 +11,18 @@ const UpiPaymentPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Passed from CheckoutPage via route state
-  const { orderPayload } = location.state || {};
+  // Passed from CheckoutPage via route state (includes orderPayload and optional buyNowItem)
+  const { orderPayload, buyNowItem } = location.state || {};
 
   const [screenshot, setScreenshot] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const upiId = import.meta.env.VITE_UPI_ID; 
+  // Modal State for Confirmation Popup
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [placedOrderId, setPlacedOrderId] = useState(null);
+
+  const upiId = import.meta.env.VITE_UPI_ID; // Replace with your actual UPI ID
 
   if (!orderPayload) {
     return (
@@ -52,12 +56,7 @@ const UpiPaymentPage = () => {
 
     setIsSubmitting(true);
     try {
-      // If you are uploading files to Cloudinary/S3, upload 'screenshot' file first 
-      // and get the secure URL. For demonstration, we simulate or pass a mockup string/URL.
-      // e.g., const formData = new FormData(); formData.append("image", screenshot);
-      // const uploadRes = await api.post("/upload", formData);
-      
-      const mockScreenshotUrl = previewUrl; // Replace with actual uploaded image URL from server
+      const mockScreenshotUrl = previewUrl; // Replace with actual uploaded image URL from server if you have file upload middleware
 
       const finalPayload = {
         ...orderPayload,
@@ -65,10 +64,18 @@ const UpiPaymentPage = () => {
         paymentStatus: "Verification Required",
       };
 
-      await dispatch(placeOrderThunk(finalPayload)).unwrap();
-      dispatch(clearCart());
-      toast.success("Payment proof submitted successfully!");
-      navigate("/order");
+      const resultAction = await dispatch(placeOrderThunk(finalPayload)).unwrap();
+      
+      // ONLY clear the main cart if this order did not come from Buy Now
+      if (!buyNowItem) {
+        dispatch(clearCart());
+      }
+      
+      // Extract the order ID and open the Success Confirmation Modal Popup
+      const orderId = resultAction?._id || resultAction?.order?._id;
+      setPlacedOrderId(orderId);
+      setShowConfirmationModal(true);
+
     } catch (error) {
       toast.error(error || "Failed to submit order");
     } finally {
@@ -77,7 +84,7 @@ const UpiPaymentPage = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-12 mt-16 md:mt-20">
+    <div className="max-w-xl mx-auto px-4 py-12 mt-16 md:mt-20 relative">
       <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
         
         {/* Header */}
@@ -167,6 +174,47 @@ const UpiPaymentPage = () => {
         </div>
 
       </div>
+
+      {/* ORDER CONFIRMATION SUCCESS MODAL POPUP */}
+      {showConfirmationModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl relative transform animate-in zoom-in-95 duration-200">
+            
+            <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
+              <Check size={40} strokeWidth={3} />
+            </div>
+
+            <h2 className="text-2xl font-black text-gray-900">Payment Proof Submitted! 🎉</h2>
+            <p className="text-sm text-gray-500 mt-2">
+              Your order has been placed and is pending verification.
+            </p>
+
+            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 my-6 text-left space-y-1">
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Order ID Reference</p>
+              <p className="text-xs font-mono font-extrabold text-gray-800">#{placedOrderId ? placedOrderId.slice(-10).toUpperCase() : ""}</p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => navigate(`/orders/${placedOrderId}`)}
+                className="w-full bg-[#06A1B7] hover:bg-[#058a9d] text-white py-3 rounded-xl font-bold text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                <Package size={18} />
+                <span>Track Order Details</span>
+              </button>
+
+              <button
+                onClick={() => navigate("/orders")}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-bold text-sm transition-all"
+              >
+                Go to My Orders
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

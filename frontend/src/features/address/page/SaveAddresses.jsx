@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
+import { useNavigate, useLocation } from "react-router";
 import { MapPin, Plus, Trash2, Edit2, Home, Briefcase, Building, X, CheckCircle2, Loader2 } from "lucide-react";
 import { getAddressesThunk, addAddressThunk, updateAddressThunk, deleteAddressThunk } from "../../../slice/address/addressThunk";
 import toast from "react-hot-toast";
 
 const SavedAddresses = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if a return path and buyNowItem were passed from the checkout page
+  const returnTo = location.state?.returnTo || null;
+  const buyNowItem = location.state?.buyNowItem || null;
+
   const { addresses, loading } = useSelector((state) => state.address);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -80,6 +88,11 @@ const SavedAddresses = () => {
       }
       setShowModal(false);
       setEditingId(null);
+
+      // If user came from checkout page, return them back and preserve the buyNowItem state!
+      if (returnTo) {
+        navigate(returnTo, { replace: true, state: { buyNowItem } });
+      }
     } catch (error) {
       toast.error(error || "Failed to save address");
     } finally {
@@ -103,7 +116,7 @@ const SavedAddresses = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12 mt-16 md:mt-20">
+    <div className="max-w-4xl mx-auto px-4 py-12">
       <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
         
         {/* Header section */}

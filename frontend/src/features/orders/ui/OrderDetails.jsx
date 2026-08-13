@@ -1,24 +1,28 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router";
+import { useParams, useNavigate } from "react-router";
+import { useDispatch } from "react-redux"; // <-- Import useDispatch
 import { 
   Package, 
   CheckCircle2, 
-  Clock, 
-  Truck, 
   MapPin, 
   ArrowLeft, 
   ShieldCheck, 
   Printer, 
-  AlertCircle 
+  AlertCircle,
+  XCircle,
+  Loader2
 } from "lucide-react";
 import api from "../../../api/axios";
+import { cancelOrderThunk } from "../../../slice/order/orderThunk"; // <-- Import the thunk
 import toast from "react-hot-toast";
 
 const OrderDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // <-- Initialize dispatch
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -38,6 +42,22 @@ const OrderDetailsPage = () => {
     }
   }, [id, navigate]);
 
+  const handleCancelOrder = async () => {
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+
+    setIsCancelling(true);
+    try {
+      // Dispatch the thunk here
+      const updatedOrder = await dispatch(cancelOrderThunk(id)).unwrap();
+      setOrder(updatedOrder);
+      toast.success("Order cancelled successfully");
+    } catch (error) {
+      toast.error(error || "Failed to cancel order");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -48,14 +68,13 @@ const OrderDetailsPage = () => {
 
   if (!order) return null;
 
-  // Status tracker helper
   const steps = ["Pending", "Confirmed", "Shipped", "Delivered"];
   const currentStatusIndex = steps.indexOf(order.orderStatus || "Pending");
+  const canCancel = order.orderStatus === "Pending";
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10 mt-16 md:mt-20">
+    <div className="max-w-4xl mx-auto px-4 py-10">
       
-      {/* Top Navigation & Actions */}
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={() => navigate("/orders")}
@@ -65,18 +84,30 @@ const OrderDetailsPage = () => {
           <span>Back to Orders</span>
         </button>
 
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-xs font-bold transition-all"
-        >
-          <Printer size={15} />
-          <span>Print Receipt</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {canCancel && (
+            <button
+              onClick={handleCancelOrder}
+              disabled={isCancelling}
+              className="flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+            >
+              {isCancelling ? <Loader2 size={15} className="animate-spin" /> : <XCircle size={15} />}
+              <span>Cancel Order</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-xs font-bold transition-all"
+          >
+            <Printer size={15} />
+            <span>Print Receipt</span>
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.03)] overflow-hidden">
         
-        {/* Header Summary Banner */}
         <div className="bg-gradient-to-r from-cyan-50/50 to-blue-50/50 p-6 md:p-8 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <span className="text-xs font-bold text-[#06A1B7] uppercase tracking-wider">Order Details</span>
@@ -89,35 +120,42 @@ const OrderDetailsPage = () => {
           </div>
 
           <div className="bg-white px-4 py-2.5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+            <div className={`w-3 h-3 rounded-full ${order.orderStatus === 'Cancelled' ? 'bg-red-500' : 'bg-emerald-500 animate-pulse'}`} />
             <div>
               <p className="text-[10px] uppercase font-bold text-gray-400">Status</p>
-              <p className="text-xs font-extrabold text-gray-800">{order.orderStatus || "Processing"}</p>
+              <p className={`text-xs font-extrabold ${order.orderStatus === 'Cancelled' ? 'text-red-600' : 'text-gray-800'}`}>
+                {order.orderStatus || "Processing"}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Visual Progress Timeline (Flipkart/Swiggy style tracker) */}
-        <div className="p-6 md:p-8 border-b border-gray-100">
-          <h3 className="text-sm font-bold text-gray-900 mb-6">Order Progress Tracker</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {steps.map((step, idx) => {
-              const isCompleted = idx <= currentStatusIndex;
-              return (
-                <div key={step} className="flex flex-col items-center text-center relative">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs mb-2 transition-all ${
-                    isCompleted ? "bg-[#06A1B7] text-white shadow-md shadow-cyan-500/20" : "bg-gray-100 text-gray-400"
-                  }`}>
-                    {isCompleted ? <CheckCircle2 size={18} /> : idx + 1}
+        {order.orderStatus !== "Cancelled" ? (
+          <div className="p-6 md:p-8 border-b border-gray-100">
+            <h3 className="text-sm font-bold text-gray-900 mb-6">Order Progress Tracker</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {steps.map((step, idx) => {
+                const isCompleted = idx <= currentStatusIndex;
+                return (
+                  <div key={step} className="flex flex-col items-center text-center relative">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs mb-2 transition-all ${
+                      isCompleted ? "bg-[#06A1B7] text-white shadow-md shadow-cyan-500/20" : "bg-gray-100 text-gray-400"
+                    }`}>
+                      {isCompleted ? <CheckCircle2 size={18} /> : idx + 1}
+                    </div>
+                    <span className={`text-xs font-bold ${isCompleted ? "text-gray-900" : "text-gray-400"}`}>{step}</span>
                   </div>
-                  <span className={`text-xs font-bold ${isCompleted ? "text-gray-900" : "text-gray-400"}`}>{step}</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="p-6 bg-red-50/50 border-b border-red-100 flex items-center gap-3 text-red-700">
+            <AlertCircle size={20} className="shrink-0" />
+            <p className="text-xs font-semibold">This order has been cancelled and will not be processed further.</p>
+          </div>
+        )}
 
-        {/* Ordered Items List */}
         <div className="p-6 md:p-8 border-b border-gray-100">
           <h3 className="text-sm font-bold text-gray-900 mb-4">Items in this Order</h3>
           <div className="divide-y divide-gray-50">
@@ -141,10 +179,7 @@ const OrderDetailsPage = () => {
           </div>
         </div>
 
-        {/* Shipping & Payment Meta Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 md:p-8 bg-gray-50/50">
-          
-          {/* Shipping Address */}
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
             <div className="flex items-center gap-2 text-xs font-bold text-[#06A1B7] uppercase tracking-wider mb-2">
               <MapPin size={15} />
@@ -157,7 +192,6 @@ const OrderDetailsPage = () => {
             <p className="text-xs font-medium text-gray-500 mt-2">Phone: {order.shippingAddress?.phone}</p>
           </div>
 
-          {/* Payment Summary */}
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-2 text-xs font-bold text-[#06A1B7] uppercase tracking-wider mb-2">
@@ -173,7 +207,6 @@ const OrderDetailsPage = () => {
               <span className="text-xl font-black text-[#06A1B7]">₹{order.totalAmount}</span>
             </div>
           </div>
-
         </div>
 
       </div>

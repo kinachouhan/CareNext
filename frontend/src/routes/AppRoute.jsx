@@ -36,66 +36,59 @@ import CheckoutPage from "../features/checkout/page/CheckoutPage";
 import UpiPaymentPage from "../features/checkout/page/UpiPaymentPage";
 import OrderDetailsPage from "../features/orders/ui/OrderDetails";
 
-
-
 const AppRoute = () => {
-
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-
 
   useEffect(() => {
-    dispatch(getMeThunk())
-      .unwrap()
-      .then(() => {
-        dispatch(getCartThunk());
-        dispatch(getWishlistThunk())
-      })
-      .catch(() => {
-         
-      });
+    // Dispatch session checks cleanly without blocking unwrap promises
+    dispatch(getMeThunk());
+    dispatch(getCartThunk());
+    dispatch(getWishlistThunk());
   }, [dispatch]);
 
   const router = createBrowserRouter([
-   {
-  path: "/admin",
-  element: <AdminLayout />,
-  children: [
-    { path: "", element: <AdminDashboard /> },
-    { path: "add-product", element: <AddProducts /> },
-    { path: "edit-product/:id", element: <EditProduct /> },
-    { path: "products", element: <AllProducts /> },
-    { path: "orders", element: <AllOrders /> },
-    { path: "orders/:id", element: <OrderSummary /> },
-  ],
-},
-
-
     {
-      path: "/",
-      element: <UserLayout />,
+      path: "/admin",
+      element: <ProtectedRoute adminOnly={true} />,
       children: [
-        { path: "", element: <Home/> },
-        { path: "shop", element: <Products /> },
-        { path: "shop/:id", element: <SingleProduct /> },
-        { path: "about", element: <About /> },
-        { path: "contact", element: <Contact /> },
-        {path:"cart" , element: <Cart/>},
-        {path:"wishlist" , element: <Wishlist/>},
         {
-          element: <ProtectedRoute />, 
+          element: <AdminLayout />,
           children: [
-            { path: "profile", element: <ProfilePage /> },
-            {path: "order" , element: <Orders/>},
-            {path: "addresses" , element: <SavedAddresses/>},
-            {path: "checkout" , element: <CheckoutPage/>},
-            {path :"checkout/upi" , element: <UpiPaymentPage/>},
-            {path: "order/:id" , element: <OrderDetailsPage /> }
+            { path: "", element: <AdminDashboard /> },
+            { path: "add-product", element: <AddProducts /> },
+            { path: "edit-product/:id", element: <EditProduct /> },
+            { path: "products", element: <AllProducts /> },
+            { path: "orders", element: <AllOrders /> },
+            { path: "orders/:id", element: <OrderSummary /> },
           ],
         },
       ],
     },
 
+    {
+      path: "/",
+      element: <UserLayout />,
+      children: [
+        { path: "", element: <Home /> },
+        { path: "shop", element: <Products /> },
+        { path: "shop/:id", element: <SingleProduct /> },
+        { path: "about", element: <About /> },
+        { path: "contact", element: <Contact /> },
+        { path: "cart", element: <Cart /> },
+        { path: "wishlist", element: <Wishlist /> },
+        {
+          element: <ProtectedRoute />, 
+          children: [
+            { path: "profile", element: <ProfilePage /> },
+            { path: "orders", element: <Orders /> },
+            { path: "addresses", element: <SavedAddresses /> },
+            { path: "checkout", element: <CheckoutPage /> },
+            { path: "checkout/upi", element: <UpiPaymentPage /> },
+            { path: "orders/:id", element: <OrderDetailsPage /> },
+          ],
+        },
+      ],
+    },
 
     {
       path: "/auth",

@@ -100,6 +100,7 @@ export const getMe = async (req, res) => {
       user: {
         _id: user._id,
         fullName: user.fullName,
+        phone: user.phone,
         email: user.email,
         role: user.role,
       },
@@ -127,5 +128,37 @@ export const logoutUser = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { fullName, email, phone } = req.body;
+    const userId = req.user._id || req.user.id; // Handles both id or _id depending on middleware
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { fullName, email, phone },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        _id: updatedUser._id,
+        fullName: updatedUser.fullName,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        role: updatedUser.role,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { MapPin, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Check, Package } from "lucide-react";
 import { getAddressesThunk } from "../../../slice/address/addressThunk";
 import { placeOrderThunk } from "../../../slice/order/orderThunk";
@@ -10,8 +10,16 @@ import toast from "react-hot-toast";
 const CheckoutPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if a single product was passed via "Buy Now" or returned back from address page
+  const buyNowItem = location.state?.buyNowItem;
 
   const cartItems = useSelector((state) => state.cart?.items || []);
+  
+  // Decide which items to checkout: Single Buy-Now item OR all cart items
+  const itemsToCheckout = buyNowItem ? [buyNowItem] : cartItems;
+
   const { addresses } = useSelector((state) => state.address);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("COD");
@@ -21,8 +29,8 @@ const CheckoutPage = () => {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [placedOrderId, setPlacedOrderId] = useState(null);
 
-  // Calculate totals
-  const subtotal = cartItems.reduce((acc, item) => acc + (Number(item?.price) || 0) * (Number(item?.quantity) || 1), 0);
+  // Calculate totals based on the active items being checked out
+  const subtotal = itemsToCheckout.reduce((acc, item) => acc + (Number(item?.price) || 0) * (Number(item?.quantity) || 1), 0);
   const shippingFee = subtotal > 500 ? 0 : 50;
   const totalAmount = subtotal + shippingFee;
 
@@ -43,14 +51,14 @@ const CheckoutPage = () => {
       toast.error("Please select a delivery address");
       return;
     }
-    if (cartItems.length === 0) {
-      toast.error("Your cart is empty");
+    if (itemsToCheckout.length === 0) {
+      toast.error("No items to checkout");
       return;
     }
 
     const orderPayload = {
-      orderItems: cartItems.map((item) => ({
-        product: item._id || item.productId,
+      orderItems: itemsToCheckout.map((item) => ({
+        product: item.product || item._id || item.productId,
         name: item.name,
         quantity: item.quantity,
         price: item.price,
@@ -70,16 +78,19 @@ const CheckoutPage = () => {
     };
 
     if (paymentMethod === "Online" || paymentMethod === "UPI") {
-      // Redirect to Scanner & Screenshot Upload page with payload state
-      navigate("/checkout/upi", { state: { orderPayload } });
+      // Redirect to Scanner page with payload state (include buyNowItem if present)
+      navigate("/checkout/upi", { state: { orderPayload, buyNowItem } });
     } else {
       // Direct COD order placement
       setIsSubmitting(true);
       try {
         const resultAction = await dispatch(placeOrderThunk(orderPayload)).unwrap();
-        dispatch(clearCart());
         
-        // Show success confirmation popup modal instead of instantly routing away
+        // ONLY clear the main Redux cart if the order came from the cart checkout (not Buy Now)
+        if (!buyNowItem) {
+          dispatch(clearCart());
+        }
+        
         const orderId = resultAction?._id || resultAction?.order?._id;
         setPlacedOrderId(orderId);
         setShowConfirmationModal(true);
@@ -91,11 +102,11 @@ const CheckoutPage = () => {
     }
   };
 
-  if (cartItems.length === 0 && !showConfirmationModal) {
+  if (itemsToCheckout.length === 0 && !showConfirmationModal) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-24 text-center">
-        <h2 className="text-2xl font-bold text-gray-900">Your Cart is Empty</h2>
-        <p className="text-gray-500 mt-2 mb-6">Add items to your cart before proceeding to checkout.</p>
+        <h2 className="text-2xl font-bold text-gray-900">No items for checkout</h2>
+        <p className="text-gray-500 mt-2 mb-6">Your cart is empty and no express item was selected.</p>
         <button
           onClick={() => navigate("/shop")}
           className="bg-[#06A1B7] text-white px-6 py-3 rounded-xl font-bold"
@@ -108,7 +119,9 @@ const CheckoutPage = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 mt-16 md:mt-20 relative">
-      <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-8">Checkout</h1>
+      <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-8">
+        {buyNowItem ? "Express Checkout (Buy Now)" : "Checkout"}
+      </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
@@ -123,7 +136,7 @@ const CheckoutPage = () => {
                 Select Delivery Address
               </h2>
               <button
-                onClick={() => navigate("/addresses")}
+                onClick={() => navigate("/addresses", { state: { returnTo: "/checkout", buyNowItem } })}
                 className="text-xs font-bold text-[#06A1B7] hover:underline"
               >
                 Manage Addresses
@@ -134,7 +147,7 @@ const CheckoutPage = () => {
               <div className="text-center py-6">
                 <p className="text-sm text-gray-500 mb-3">No saved addresses found.</p>
                 <button
-                  onClick={() => navigate("/addresses")}
+                  onClick={() => navigate("/addresses", { state: { returnTo: "/checkout", buyNowItem } })}
                   className="bg-[#06A1B7] text-white px-4 py-2 rounded-xl text-xs font-bold"
                 >
                   Add Address Now
@@ -212,8 +225,8 @@ const CheckoutPage = () => {
             <h2 className="text-lg font-bold text-gray-900 pb-4 border-b border-gray-100">Order Summary</h2>
 
             <div className="py-4 max-h-60 overflow-y-auto space-y-3">
-              {cartItems.map((item) => (
-                <div key={item._id || item.productId} className="flex items-center gap-3">
+              {itemsToCheckout.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-3">
                   <img src={item.image} alt={item.name} className="w-12 h-12 object-contain rounded-xl bg-gray-50 p-1 shrink-0" />
                   <div className="flex-1 overflow-hidden">
                     <h4 className="text-xs font-bold text-gray-800 truncate">{item.name}</h4>
