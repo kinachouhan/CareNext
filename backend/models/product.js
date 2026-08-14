@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { reviewSchema } from "../models/rating.js"; 
 
 const productSchema = new mongoose.Schema(
   {
@@ -38,9 +39,8 @@ const productSchema = new mongoose.Schema(
 
     unit: {
       type: String,
-      enum: [
-    "Kg", "Gram","Litre", "ml","Piece", "Packet", "Box",],
-      default: "piece",
+      enum: ["Kg", "Gram", "Litre", "ml", "Piece", "Packet", "Box"],
+      default: "Piece",
     },
 
     shortDescription: {
@@ -78,6 +78,17 @@ const productSchema = new mongoose.Schema(
       type: String,
       enum: ["active", "inactive"],
       default: "active",
+    },
+
+    // Embedded Review Fields added here:
+    reviews: [reviewSchema],
+    ratings: {
+      type: Number,
+      default: 0,
+    },
+    numReviews: {
+      type: Number,
+      default: 0,
     },
   },
   {

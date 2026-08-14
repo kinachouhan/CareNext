@@ -1,6 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
   addProductThunk,
+  createReviewThunk,
+  updateReviewThunk,
+  deleteReviewThunk,
   deleteProductThunk,
   getProductByIdThunk,
   getProductsThunk,
@@ -16,29 +19,38 @@ const initialState = {
 const productSlice = createSlice({
   name: "products",
   initialState,
-  reducers: {},
+  reducers: {
+    clearSelectedProduct: (state) => {
+      state.selectedProduct = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(addProductThunk.pending, (state, action) => {
+      // Add Product
+      .addCase(addProductThunk.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(addProductThunk.fulfilled, (state, action) => {
         state.products.push(action.payload);
         state.isLoading = false;
       })
-      .addCase(addProductThunk.rejected, (state, action) => {
+      .addCase(addProductThunk.rejected, (state) => {
         state.isLoading = false;
       })
-      .addCase(getProductsThunk.pending, (state, action) => {
+
+      // Get All Products
+      .addCase(getProductsThunk.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(getProductsThunk.fulfilled, (state, action) => {
         state.products = action.payload;
         state.isLoading = false;
       })
-      .addCase(getProductsThunk.rejected, (state, action) => {
+      .addCase(getProductsThunk.rejected, (state) => {
         state.isLoading = false;
       })
+
+      // Delete Product
       .addCase(deleteProductThunk.pending, (state) => {
         state.isLoading = true;
       })
@@ -51,7 +63,9 @@ const productSlice = createSlice({
       .addCase(deleteProductThunk.rejected, (state) => {
         state.isLoading = false;
       })
-      .addCase(updateProductThunk.pending, (state, action) => {
+
+      // Update Product
+      .addCase(updateProductThunk.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(updateProductThunk.fulfilled, (state, action) => {
@@ -63,20 +77,71 @@ const productSlice = createSlice({
           state.products[index] = action.payload;
         }
       })
-      .addCase(updateProductThunk.rejected, (state, action) => {
+      .addCase(updateProductThunk.rejected, (state) => {
         state.isLoading = false;
       })
-      .addCase(getProductByIdThunk.pending, (state, action) => {
+
+      // Get Single Product by ID
+      .addCase(getProductByIdThunk.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(getProductByIdThunk.fulfilled, (state, action) => {
         state.selectedProduct = action.payload;
         state.isLoading = false;
       })
-      .addCase(getProductByIdThunk.rejected, (state, action) => {
+      .addCase(getProductByIdThunk.rejected, (state) => {
+        state.isLoading = false;
+      })
+
+      // Create Review
+      .addCase(createReviewThunk.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(createReviewThunk.fulfilled, (state, action) => {
+        state.isLoading = false;
+        if (state.selectedProduct) {
+          state.selectedProduct.reviews = action.payload.reviews;
+          state.selectedProduct.ratings = action.payload.ratings;
+          state.selectedProduct.numReviews = action.payload.numReviews;
+        }
+      })
+      .addCase(createReviewThunk.rejected, (state) => {
+        state.isLoading = false;
+      })
+
+      // Update Review
+      .addCase(updateReviewThunk.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateReviewThunk.fulfilled, (state, action) => {
+        state.isLoading = false;
+        if (state.selectedProduct) {
+          state.selectedProduct.reviews = action.payload.reviews;
+          state.selectedProduct.ratings = action.payload.ratings;
+          state.selectedProduct.numReviews = action.payload.numReviews;
+        }
+      })
+      .addCase(updateReviewThunk.rejected, (state) => {
+        state.isLoading = false;
+      })
+
+      // Delete Review
+      .addCase(deleteReviewThunk.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deleteReviewThunk.fulfilled, (state, action) => {
+        state.isLoading = false;
+        if (state.selectedProduct) {
+          state.selectedProduct.reviews = action.payload.reviews;
+          state.selectedProduct.ratings = action.payload.ratings;
+          state.selectedProduct.numReviews = action.payload.numReviews;
+        }
+      })
+      .addCase(deleteReviewThunk.rejected, (state) => {
         state.isLoading = false;
       });
   },
 });
 
+export const { clearSelectedProduct } = productSlice.actions;
 export default productSlice.reducer;
