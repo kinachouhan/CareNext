@@ -3,8 +3,7 @@ import { NavLink, useNavigate } from "react-router";
 import { ShoppingCart, User, Heart, Menu, X, LogIn, LogOut } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { openCart } from "../../slice/cart/cartSlice";
-import api from "../../api/axios";
-import { useWishlist } from "../../features/wishlist/hooks/useWishlist"; // Ensure this path is correct
+import { useWishlist } from "../../features/wishlist/hooks/useWishlist";
 import { logoutThunk } from "../../slice/auth/authThunk";
 
 const Navbar = () => {
@@ -31,9 +30,9 @@ const Navbar = () => {
 
   const handleCartClick = () => dispatch(openCart());
 
-  const handleLogout =  () => {
-      dispatch(logoutThunk())
-      navigate("/auth/login");
+  const handleLogout = () => {
+    dispatch(logoutThunk());
+    navigate("/auth/login");
   };
 
   return (
@@ -109,6 +108,7 @@ const Navbar = () => {
                 <button
                   onClick={handleLogout}
                   className="p-2.5 rounded-full text-gray-600 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  title="Logout"
                 >
                   <LogOut size={20} />
                 </button>
@@ -149,12 +149,29 @@ const Navbar = () => {
               </NavLink>
             ))}
             {user ? (
-              <button onClick={() => { handleLogout(); setOpenMenu(false); }} className="px-4 py-3 text-red-600 font-medium hover:bg-red-50 rounded-xl text-left">
-                Logout
-              </button>
+              <>
+                <button 
+                  onClick={() => { navigate("/profile"); setOpenMenu(false); }} 
+                  className="px-4 py-3 text-gray-700 font-medium hover:bg-gray-50 rounded-xl text-left flex items-center gap-3"
+                >
+                  <User size={18} />
+                  <span>Profile ({user?.fullName || "Account"})</span>
+                </button>
+                <button 
+                  onClick={() => { handleLogout(); setOpenMenu(false); }} 
+                  className="px-4 py-3 text-red-600 font-medium hover:bg-red-50 rounded-xl text-left flex items-center gap-3"
+                >
+                  <LogOut size={18} />
+                  <span>Logout</span>
+                </button>
+              </>
             ) : (
-              <button onClick={() => { navigate("/auth/login"); setOpenMenu(false); }} className="px-4 py-3 bg-[#06A1B7] text-white font-medium rounded-xl">
-                Login
+              <button 
+                onClick={() => { navigate("/auth/login"); setOpenMenu(false); }} 
+                className="px-4 py-3 bg-[#06A1B7] text-white font-medium rounded-xl flex items-center justify-center gap-2"
+              >
+                <LogIn size={18} />
+                <span>Login</span>
               </button>
             )}
           </div>

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, memo } from "react";
 import { useNavigate, useParams } from "react-router";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
@@ -66,26 +66,28 @@ const EditProduct = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7FB] p-4 sm:p-6">
-
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">
+    <div className="min-h-screen bg-[#F5F7FB] p-3 sm:p-4 md:p-6 pb-20">
+      
+      <div className="mb-6 sm:px-6 px-4">
+        <h1 className=" text-2xl md:text-3xl font-bold text-gray-950">
           Edit Product
         </h1>
 
-        <p className="text-gray-500 mt-1">
-          Update your product information.
+        <p className="text-xs md:text-sm text-gray-500 mt-0.5">
+          Update your product inventory details and specs.
         </p>
       </div>
 
-      <ProductForm
-        mode="edit"
-        product={selectedProduct}
-        onSubmit={handleUpdateProduct}
-        loading={isLoading}
-      />
+      <div className=" rounded-3xl shadow-[0_2px_15px_rgba(0,0,0,0.02)] border border-gray-100 ">
+        <ProductForm
+          mode="edit"
+          product={selectedProduct}
+          onSubmit={handleUpdateProduct}
+          loading={isLoading}
+        />
+      </div>
     </div>
   );
 };
 
-export default React.memo(EditProduct);
+export default memo(EditProduct);

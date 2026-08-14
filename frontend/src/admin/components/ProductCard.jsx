@@ -1,81 +1,81 @@
-import React from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router";
+import React, { memo } from "react";
 
-const ProductCard = ({ product, onDelete }) => {
+const ProductCard = memo(({ product, onDelete }) => {
   return (
-    <div className="bg-white rounded-2xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition">
+    <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-[0_2px_15px_rgba(0,0,0,0.02)] hover:shadow-xl hover:border-gray-200 transition-all duration-300 flex flex-col justify-between h-full">
       <div className="flex gap-4">
         <img
           src={product.image}
           alt={product.name}
-          className="w-24 h-24 rounded-xl object-cover border"
+          className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover bg-gray-50 border border-gray-100 shrink-0"
           loading="lazy"
         />
 
-        <div className="flex-1">
-          <h2 className="text-lg font-semibold text-gray-800">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-sm sm:text-base font-bold text-gray-900 truncate">
             {product.name}
           </h2>
 
-          <p className="text-sm text-gray-500">
-            {product.subCategory}
+          <p className="text-xs font-semibold text-[#06A1B7] mt-0.5 truncate">
+            {product.subCategory || "General"}
           </p>
 
-          <div className="mt-3 space-y-1 text-sm">
-            <p>
-              <span className="font-medium">
-                Category:
-              </span>{" "}
-              {product.category}
+          <div className="mt-2.5 space-y-1 text-xs text-gray-600">
+            <p className="truncate">
+              <span className="font-bold text-gray-400 uppercase text-[10px]">Category:</span>{" "}
+              <span className="font-medium text-gray-700">{product.category}</span>
             </p>
 
             <p>
-              <span className="font-medium">
-                Price:
-              </span>{" "}
-              ₹{product.price}
+              <span className="font-bold text-gray-400 uppercase text-[10px]">Price:</span>{" "}
+              <span className="font-extrabold text-gray-900">₹{product.price}</span>
             </p>
 
             <p>
-              <span className="font-medium">
-                Stock:
-              </span>{" "}
-              {product.stock}
+              <span className="font-bold text-gray-400 uppercase text-[10px]">Stock:</span>{" "}
+              <span className={`font-bold ${product.stock > 0 ? "text-emerald-600" : "text-red-600"}`}>
+                {product.stock} units
+              </span>
             </p>
-          </div>
-
-          <div className="mt-3">
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-medium ${
-                product.status === "active"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
-              }`}
-            >
-              {product.status}
-            </span>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 mt-5 border-t pt-4">
-        <Link
-          to={`/admin/edit-product/${product._id}`}
-          className="p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition"
+      <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
+        <span
+          className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider ${
+            product.status === "active"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-red-50 text-red-700"
+          }`}
         >
-          <Pencil size={18} />
-        </Link>
+          {product.status}
+        </span>
 
-        <button
-          onClick={() => onDelete(product._id)}
-          className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition cursor-pointer"
-        >
-          <Trash2 size={18} />
-        </button>
+        <div className="flex items-center gap-1.5">
+          <Link
+            to={`/admin/edit-product/${product._id}`}
+            className="p-2 rounded-xl bg-cyan-50 text-[#06A1B7] hover:bg-cyan-100 transition-colors"
+            title="Edit Product"
+          >
+            <Pencil size={16} />
+          </Link>
+
+          <button
+            onClick={() => onDelete(product._id)}
+            className="p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors cursor-pointer"
+            title="Delete Product"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       </div>
     </div>
   );
-};
+});
 
-export default React.memo(ProductCard);
+ProductCard.displayName = "ProductCard";
+
+export default ProductCard;

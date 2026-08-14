@@ -26,7 +26,7 @@ export const Footer = () => {
         {/* BRAND COLUMN */}
         <div className="space-y-4">
           <div className="bg-white inline-block rounded-xl p-2.5 shadow-sm">
-            <img src="Logo.png" alt="CareNXT Logo" className="w-32 object-contain" />
+            <img src="/Logo.png" alt="CareNXT" className="w-32 object-contain" />
           </div>
 
           <h3 className="text-white text-xl font-bold tracking-tight">

@@ -91,15 +91,15 @@ const Orders = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12">
-      <div className="flex items-center justify-between mb-8">
+    <div className="max-w-5xl mx-auto px-4 ">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900">My Orders</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Track, view, and manage your past purchases</p>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 px-6">My Orders</h1>
+          <p className="text-sm text-gray-500 mt-0.5 px-6">Track, view, and manage your past purchases</p>
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-2">
         {orders.map((order) => (
           <Link 
             key={order._id}

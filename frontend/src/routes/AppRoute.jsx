@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router"; 
-
+import ScrollToTop from "../shared/components/ScrollTop"; 
 // Admin Imports
 import AdminLayout from "../app/layout/AdminLayout";
 import AdminDashboard from "../admin/pages/AdminDashboard";
@@ -25,7 +25,7 @@ import Login from "../features/auth/pages/Login";
 import Register from "../features/auth/pages/Register";
 import ProtectedRoute from "./ProtectedRoute";
 import Cart from "../features/cart/page/Cart";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { getCartThunk } from "../slice/cart/cartThunk";
 import { getMeThunk } from "../slice/auth/authThunk";
 import Wishlist from "../features/wishlist/page/Wishlist";
@@ -48,54 +48,60 @@ const AppRoute = () => {
 
   const router = createBrowserRouter([
     {
-      path: "/admin",
-      element: <ProtectedRoute adminOnly={true} />,
+      // Root wrapper element handling global scroll to top on every route change
+      element: <ScrollToTop />,
       children: [
         {
-          element: <AdminLayout />,
+          path: "/admin",
+          element: <ProtectedRoute adminOnly={true} />,
           children: [
-            { path: "", element: <AdminDashboard /> },
-            { path: "add-product", element: <AddProducts /> },
-            { path: "edit-product/:id", element: <EditProduct /> },
-            { path: "products", element: <AllProducts /> },
-            { path: "orders", element: <AllOrders /> },
-            { path: "orders/:id", element: <OrderSummary /> },
+            {
+              element: <AdminLayout />,
+              children: [
+                { path: "", element: <AdminDashboard /> },
+                { path: "add-product", element: <AddProducts /> },
+                { path: "edit-product/:id", element: <EditProduct /> },
+                { path: "products", element: <AllProducts /> },
+                { path: "orders", element: <AllOrders /> },
+                { path: "orders/:id", element: <OrderSummary /> },
+              ],
+            },
           ],
         },
-      ],
-    },
 
-    {
-      path: "/",
-      element: <UserLayout />,
-      children: [
-        { path: "", element: <Home /> },
-        { path: "shop", element: <Products /> },
-        { path: "shop/:id", element: <SingleProduct /> },
-        { path: "about", element: <About /> },
-        { path: "contact", element: <Contact /> },
-        { path: "cart", element: <Cart /> },
-        { path: "wishlist", element: <Wishlist /> },
         {
-          element: <ProtectedRoute />, 
+          path: "/",
+          element: <UserLayout />,
           children: [
-            { path: "profile", element: <ProfilePage /> },
-            { path: "orders", element: <Orders /> },
-            { path: "addresses", element: <SavedAddresses /> },
-            { path: "checkout", element: <CheckoutPage /> },
-            { path: "checkout/upi", element: <UpiPaymentPage /> },
-            { path: "orders/:id", element: <OrderDetailsPage /> },
+            { path: "", element: <Home /> },
+            { path: "shop", element: <Products /> },
+            { path: "shop/:id", element: <SingleProduct /> },
+            { path: "about", element: <About /> },
+            { path: "contact", element: <Contact /> },
+            { path: "cart", element: <Cart /> },
+            { path: "wishlist", element: <Wishlist /> },
+            {
+              element: <ProtectedRoute />, 
+              children: [
+                { path: "profile", element: <ProfilePage /> },
+                { path: "orders", element: <Orders /> },
+                { path: "addresses", element: <SavedAddresses /> },
+                { path: "checkout", element: <CheckoutPage /> },
+                { path: "checkout/upi", element: <UpiPaymentPage /> },
+                { path: "orders/:id", element: <OrderDetailsPage /> },
+              ],
+            },
           ],
         },
-      ],
-    },
 
-    {
-      path: "/auth",
-      element: <AuthLayout />,
-      children: [
-        { path: "login", element: <Login /> },
-        { path: "register", element: <Register /> },
+        {
+          path: "/auth",
+          element: <AuthLayout />,
+          children: [
+            { path: "login", element: <Login /> },
+            { path: "register", element: <Register /> },
+          ],
+        },
       ],
     },
   ]);

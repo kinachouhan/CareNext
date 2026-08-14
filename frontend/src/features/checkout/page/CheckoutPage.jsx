@@ -118,7 +118,7 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 mt-16 md:mt-20 relative">
+    <div className="max-w-6xl mx-auto px-4 py-10 relative">
       <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-8">
         {buyNowItem ? "Express Checkout (Buy Now)" : "Checkout"}
       </h1>

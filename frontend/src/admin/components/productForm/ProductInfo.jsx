@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, memo } from "react";
 import { useFormContext } from "react-hook-form";
 import {
   inputStyles,
@@ -8,7 +8,7 @@ import {
   sectionTitle,
   selectStyles,
 } from "./styles";
-import categories from "../../../lib/categoryData.json"
+import categories from "../../../lib/categoryData.json";
 
 const ProductInfo = () => {
   const {
@@ -27,12 +27,15 @@ const ProductInfo = () => {
 
   return (
     <div className={cardStyles}>
-      <h2 className={sectionTitle}>
+      <h2 className={`${sectionTitle} text-base sm:text-lg`}>
         Product Information
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div>
-          <label className={labelStyles}>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
+        
+        {/* Product Name */}
+        <div className="md:col-span-2">
+          <label className={`${labelStyles} text-xs sm:text-sm`}>
             Product Name
           </label>
 
@@ -40,19 +43,18 @@ const ProductInfo = () => {
             {...register("productName", {
               required: "Product Name is required",
             })}
-            className={inputStyles}
+            className={`${inputStyles} text-xs sm:text-sm py-2.5 sm:py-3`}
             placeholder="Enter Product Name"
           />
 
-          <p className={errorStyles}>
+          <p className={`${errorStyles} text-[11px] sm:text-xs`}>
             {errors.productName?.message}
           </p>
         </div>
 
         {/* Category */}
-
         <div>
-          <label className={labelStyles}>
+          <label className={`${labelStyles} text-xs sm:text-sm`}>
             Category
           </label>
 
@@ -60,7 +62,7 @@ const ProductInfo = () => {
             {...register("category", {
               required: "Category is required",
             })}
-            className={selectStyles}
+            className={`${selectStyles} text-xs sm:text-sm py-2.5 sm:py-3`}
           >
             <option value="">
               Select Category
@@ -76,15 +78,14 @@ const ProductInfo = () => {
             ))}
           </select>
 
-          <p className={errorStyles}>
+          <p className={`${errorStyles} text-[11px] sm:text-xs`}>
             {errors.category?.message}
           </p>
         </div>
 
         {/* Sub Category */}
-
         <div>
-          <label className={labelStyles}>
+          <label className={`${labelStyles} text-xs sm:text-sm`}>
             Sub Category
           </label>
 
@@ -92,10 +93,11 @@ const ProductInfo = () => {
             {...register("subCategory", {
               required: "Sub Category is required",
             })}
-            className={selectStyles}
+            className={`${selectStyles} text-xs sm:text-sm py-2.5 sm:py-3`}
+            disabled={!selectedCategory}
           >
             <option value="">
-              Select Sub Category
+              {selectedCategory ? "Select Sub Category" : "Select category first"}
             </option>
 
             {selectedCategoryData?.sub?.map(
@@ -110,7 +112,7 @@ const ProductInfo = () => {
             )}
           </select>
 
-          <p className={errorStyles}>
+          <p className={`${errorStyles} text-[11px] sm:text-xs`}>
             {errors.subCategory?.message}
           </p>
         </div>
@@ -120,4 +122,4 @@ const ProductInfo = () => {
   );
 };
 
-export default React.memo(ProductInfo);
+export default memo(ProductInfo);

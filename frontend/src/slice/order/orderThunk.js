@@ -19,7 +19,6 @@ export const getOrdersThunk = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await api.get("/orders", { withCredentials: true });
-      console.log("API /orders Response Data:", res.data); // <-- Check this in your browser console (F12)
       return res.data.orders;
     } catch (error) {
       console.error("API /orders Error:", error.response || error);

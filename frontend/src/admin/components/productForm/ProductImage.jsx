@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, memo } from "react";
 import { ImagePlus, Trash2 } from "lucide-react";
 import { useFormContext, useWatch } from "react-hook-form";
 import {
@@ -31,27 +31,24 @@ const ProductImage = ({ currentImage }) => {
   const [preview, setPreview] = useState(currentImage || null);
 
   useEffect(() => {
-    // No new image selected
     if (!image?.length) {
       setPreview(currentImage || null);
       return;
     }
 
     const file = image[0];
-
     if (!(file instanceof File)) return;
 
     const objectUrl = URL.createObjectURL(file);
-
     setPreview(objectUrl);
 
     return () => URL.revokeObjectURL(objectUrl);
   }, [image, currentImage]);
 
-  const removeImage = useCallback(() => {
+  const removeImage = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
     setValue("image", null);
-
-    // Restore existing image if editing
     setPreview(currentImage || null);
   }, [setValue, currentImage]);
 
@@ -63,48 +60,40 @@ const ProductImage = ({ currentImage }) => {
 
       <label
         htmlFor="image"
-        className="
-          border-2
-          border-dashed
-          border-gray-300
-          rounded-2xl
-          p-8
-          flex
-          flex-col
-          items-center
-          justify-center
-          cursor-pointer
-          hover:border-[#06A1B7]
-          transition
-        "
+        className="group relative border-2 border-dashed border-gray-200 hover:border-[#06A1B7] rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center cursor-pointer bg-gray-50/50 hover:bg-cyan-50/20 transition-all duration-300"
       >
         {preview ? (
-          <img
-            src={preview}
-            alt="Preview"
-            className="w-56 h-56 rounded-xl object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <>
-            <ImagePlus
-              size={60}
-              className="text-gray-400 mb-4"
+          <div className="relative flex flex-col items-center">
+            <img
+              src={preview}
+              alt="Preview"
+              className="w-48 h-48 sm:w-56 sm:h-56 rounded-2xl object-cover shadow-md border border-gray-100"
+              loading="lazy"
+              decoding="async"
             />
+            <button
+              type="button"
+              onClick={removeImage}
+              className="absolute -top-3 -right-3 bg-red-600 hover:bg-red-700 text-white p-2.5 rounded-full shadow-lg transition-all active:scale-95 flex items-center justify-center"
+              title="Remove Image"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center text-center py-4">
+            <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center text-[#06A1B7] mb-3 group-hover:scale-105 transition-transform">
+              <ImagePlus size={28} />
+            </div>
 
-            <p className="font-medium">
-              Click to Upload
+            <p className="font-bold text-gray-800 text-sm sm:text-base">
+              Click to upload product image
             </p>
 
-            <p className="text-gray-500 text-sm">
-              JPG • PNG • WEBP
+            <p className="text-gray-400 text-xs mt-1">
+              Supports: JPG, PNG, WEBP (Max 2MB)
             </p>
-
-            <p className="text-xs text-gray-400 mt-1">
-              Maximum 2 MB
-            </p>
-          </>
+          </div>
         )}
 
         <input
@@ -137,30 +126,8 @@ const ProductImage = ({ currentImage }) => {
           {errors.image.message}
         </p>
       )}
-
-      {preview && (
-        <button
-          type="button"
-          onClick={removeImage}
-          className="
-            mt-5
-            bg-red-500
-            hover:bg-red-600
-            text-white
-            px-5
-            py-2
-            rounded-xl
-            flex
-            items-center
-            gap-2
-          "
-        >
-          <Trash2 size={18} />
-          Remove Image
-        </button>
-      )}
     </div>
   );
 };
 
-export default React.memo(ProductImage);
+export default memo(ProductImage);

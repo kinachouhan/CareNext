@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { useFormContext } from "react-hook-form";
 import {
   inputStyles,
@@ -9,17 +9,7 @@ import {
   selectStyles,
 } from "./styles";
 
-const units = [
-  "Kg",
-  "Gram",
-  "Litre",
-  "ml",
-  "Piece",
-  "Packet",
-  "Box",
-];
-
-
+const UNITS = ["Kg", "Gram", "Litre", "ml", "Piece", "Packet", "Box"];
 
 const PricingInventory = () => {
   const {
@@ -29,108 +19,113 @@ const PricingInventory = () => {
 
   return (
     <div className={cardStyles}>
-      <h2 className={sectionTitle}>
+      <h2 className={`${sectionTitle} text-base sm:text-lg`}>
         Pricing & Inventory
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5">
 
         {/* Price */}
-
-        <div>
-          <label className={labelStyles}>
+        <div className="col-span-1">
+          <label className={`${labelStyles} text-xs sm:text-sm`}>
             Price (₹)
           </label>
 
           <input
             type="number"
             min={1}
+            step="any"
             placeholder="100"
-            className={inputStyles}
+            className={`${inputStyles} text-xs sm:text-sm py-2.5 sm:py-3`}
             {...register("price", {
-              required: "Price is required",
+              required: "Price required",
               min: {
                 value: 1,
-                message: "Price must be greater than 0",
+                message: "Must be > 0",
               },
+              valueAsNumber: true,
             })}
           />
 
-          <p className={errorStyles}>
+          <p className={`${errorStyles} text-[11px] sm:text-xs`}>
             {errors.price?.message}
           </p>
         </div>
 
         {/* Discount */}
-
-        <div>
-          <label className={labelStyles}>
-            Discount
+        <div className="col-span-1">
+          <label className={`${labelStyles} text-xs sm:text-sm`}>
+            Discount (%)
           </label>
 
           <input
             type="number"
+            min={0}
+            max={100}
             placeholder="10"
-            className={inputStyles}
-            {...register("discount")}
+            className={`${inputStyles} text-xs sm:text-sm py-2.5 sm:py-3`}
+            {...register("discount", {
+              min: { value: 0, message: "Min 0%" },
+              max: { value: 100, message: "Max 100%" },
+              valueAsNumber: true,
+            })}
           />
 
-          <p className={errorStyles}>
+          <p className={`${errorStyles} text-[11px] sm:text-xs`}>
             {errors.discount?.message}
           </p>
         </div>
 
         {/* Stock */}
-
-        <div>
-          <label className={labelStyles}>
+        <div className="col-span-1">
+          <label className={`${labelStyles} text-xs sm:text-sm`}>
             Stock
           </label>
 
           <input
             type="number"
-            min={1}
+            min={0}
             placeholder="50"
-            className={inputStyles}
+            className={`${inputStyles} text-xs sm:text-sm py-2.5 sm:py-3`}
             {...register("stock", {
-              required: "Stock is required",
+              required: "Stock required",
               min: {
-                value: 1,
-                message: "Invalid stock",
+                value: 0,
+                message: "Cannot be negative",
               },
+              valueAsNumber: true,
             })}
           />
 
-          <p className={errorStyles}>
+          <p className={`${errorStyles} text-[11px] sm:text-xs`}>
             {errors.stock?.message}
           </p>
         </div>
 
         {/* Unit */}
-
-        <div>
-          <label className={labelStyles}>
+        <div className="col-span-1">
+          <label className={`${labelStyles} text-xs sm:text-sm`}>
             Unit
           </label>
 
           <select
-            className={selectStyles}
+            className={`${selectStyles} text-xs sm:text-sm py-2.5 sm:py-3`}
             {...register("unit", {
-              required: "Unit is required",
+              required: "Unit required",
             })}
           >
             <option value="">
               Select Unit
             </option>
 
-            {units.map((unit) => (
+            {UNITS.map((unit) => (
               <option key={unit} value={unit}>
                 {unit}
               </option>
             ))}
           </select>
 
-          <p className={errorStyles}>
+          <p className={`${errorStyles} text-[11px] sm:text-xs`}>
             {errors.unit?.message}
           </p>
         </div>
@@ -140,4 +135,4 @@ const PricingInventory = () => {
   );
 };
 
-export default React.memo(PricingInventory);
+export default memo(PricingInventory);
